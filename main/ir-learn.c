@@ -195,7 +195,7 @@ bool compare_ir_symbols(const rmt_symbol_word_t *a, size_t a_num, const rmt_symb
 }
 void reset_ir_nvs()
 {
-    ESP_LOGW(TAG, "Đang xóa dữ liệu IR trong NVS...");
+    ESP_LOGW(TAG, "Clearing IR data from NVS...");
     nvs_handle_t handle;
     if (nvs_open(NVS_NAMESPACE, NVS_READWRITE, &handle) == ESP_OK)
     {
@@ -203,11 +203,11 @@ void reset_ir_nvs()
         nvs_erase_key(handle, "ir_len"); // Delete signal length
         nvs_commit(handle);
         nvs_close(handle);
-        ESP_LOGI(TAG, "🧹 Đã xóa IR khỏi NVS.");
+        ESP_LOGI(TAG, "IR data cleared from NVS.");
     }
     else
     {
-        ESP_LOGE(TAG, "Không thể mở NVS để xóa.");
+        ESP_LOGE(TAG, "Failed to open NVS for erasing.");
     }
 }
 static bool rmt_rx_callback(rmt_channel_handle_t channel, const rmt_rx_done_event_data_t *edata, void *user_data)
@@ -392,12 +392,12 @@ static void ir_learn_task(void *arg)
                 }
                 else
                 {
-                    ESP_LOGW(TAG, "Không học được tín hiệu IR");
+                    ESP_LOGW(TAG, "Failed to learn IR signal");
                     if (symbols)
                         free(symbols);
                 }
                 light_flag = false;
-                ESP_LOGI(TAG, "Chế độ nhận tín hiệu IR bắt đầu...");
+                ESP_LOGI(TAG, "IR receive mode started...");
                 vTaskDelay(pdMS_TO_TICKS(500)); 
                 start_ir_receive(); //Start receiving IR again
                 break;
@@ -412,17 +412,17 @@ static void ir_learn_task(void *arg)
             {
                 event = IR_EVENT_RECEIVE;
                 xQueueSend(ir_event_queue, &event, portMAX_DELAY);
-                ESP_LOGI(TAG, "Nhận tín hiệu IR: %d symbols", received_num);
+                ESP_LOGI(TAG, "Received IR signal: %d symbols", received_num);
                 esp_err_t err = load_ir_from_nvs(NVS_KEY, &saved_symbols, &saved_num);
 
                 if (compare_ir_symbols(saved_symbols, saved_num, received_symbols, received_num))
                 {
-                    ESP_LOGI(TAG, "🎯 Tín hiệu nhận khớp với NVS!");
+                    ESP_LOGI(TAG, "Signal matches NVS");
                     set_light_state(LIGHT_GPIO);
                 }
                 else
                 {
-                    ESP_LOGW(TAG, "⚠️ Tín hiệu không khớp!");
+                    ESP_LOGW(TAG, "Signal does NOT match!");
                 }
                 free(received_symbols);
                 vTaskDelay(pdMS_TO_TICKS(100)); 
