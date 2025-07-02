@@ -25,15 +25,14 @@
 #include "ir_learn_err_check.h"
 #include "ir_remote.h"
 
-static const char *TAG = "ir learn";
+static const char *TAG = "Ir-learn";
 
 extern QueueHandle_t ir_learn_queue;
+extern QueueHandle_t ir_trans_queue;
 
 #define RMT_RX_MEM_BLOCK_SIZE CONFIG_RMT_MEM_BLOCK_SYMBOLS
 #define RMT_DECODE_MARGIN CONFIG_RMT_DECODE_MARGIN_US
 #define RMT_MAX_RANGE_TIME CONFIG_RMT_SINGLE_RANGE_MAX_US
-
-static const int LEARN_TASK_DELETE = BIT0;
 
 typedef struct
 {
@@ -164,10 +163,9 @@ static esp_err_t init_rmt_rx(ir_learn_t *ctx)
     esp_err_t ret = rmt_new_rx_channel(&rx_channel_cfg, &ctx->channel_rx);
     if (ret != ESP_OK)
     {
-        ESP_LOGE("ir_learn", "❌ Failed to create RX channel: %s", esp_err_to_name(ret));
+        ESP_LOGE(TAG, "Failed to create RX channel: %s", esp_err_to_name(ret));
         return ret;
     }
-    
 
     rmt_rx_event_callbacks_t cbs = {
         .on_recv_done = ir_learn_rx_done_callback,
@@ -290,7 +288,7 @@ static void ir_learn_task(void *arg)
 {
     ir_learn_common_param_t *learn_param = (ir_learn_common_param_t *)arg;
     rmt_rx_done_event_data_t learn_data;
-    ir_event_t event;
+    ir_event_cmd_t ir_event;
 
     int64_t cur_time;
     size_t period;
@@ -301,13 +299,12 @@ static void ir_learn_task(void *arg)
 
     while (1)
     {
-        // 💤 Đợi đến khi có sự kiện yêu cầu học IR (nhấn giữ nút)
-        if (xQueueReceive(ir_learn_queue, &event, portMAX_DELAY) == pdTRUE)
+        if (xQueueReceive(ir_learn_queue, &ir_event, portMAX_DELAY) == pdTRUE)
         {
-            if (event == IR_EVENT_LEARN)
+            if (ir_event.event == IR_EVENT_LEARN)
             {
-                ESP_LOGI("IR_LEARN", "🔁 Bắt đầu học tín hiệu IR...");
-        
+                ESP_LOGI(TAG, "Start learning IR cmd for key: %s", ir_event.key);
+
                 ir_learn_resume(learn_param->ctx);
 
                 if (learn_param->user_cb)
@@ -330,7 +327,7 @@ static void ir_learn_task(void *arg)
                     {
                         if (learn_data.num_symbols < 5)
                         {
-                            ESP_LOGW("IR_LEARN", "🚫 Tín hiệu quá ngắn, bỏ qua.");
+                            ESP_LOGW(TAG, "Signal too short, received symbols: %d", learn_data.num_symbols);
                             rmt_receive(learn_param->ctx->channel_rx,
                                         learn_param->ctx->rmt_rx.received_symbols,
                                         learn_param->ctx->rmt_rx.num_symbols,
@@ -353,7 +350,6 @@ static void ir_learn_task(void *arg)
                             learn_param->ctx->learned_count++;
                         }
 
-                        // 🚧 Thêm dữ liệu vào danh sách học
                         ir_learn_list_lock(learn_param->ctx, 0);
                         if (learn_param->ctx->learned_sub == 1)
                         {
@@ -369,7 +365,6 @@ static void ir_learn_task(void *arg)
                         ir_learn_add_sub_list_node(&last->cmd_sub_node, period, &learn_data);
                         ir_learn_list_unlock(learn_param->ctx);
 
-                        // 🔊 Gọi callback nếu có
                         if (learn_param->user_cb)
                         {
                             learn_param->user_cb(learn_param->ctx->learned_count,
@@ -377,7 +372,6 @@ static void ir_learn_task(void *arg)
                                                  &last->cmd_sub_node);
                         }
 
-                        // 🔁 Tiếp tục chờ tín hiệu tiếp theo
                         rmt_receive(learn_param->ctx->channel_rx,
                                     learn_param->ctx->rmt_rx.received_symbols,
                                     learn_param->ctx->rmt_rx.num_symbols,
@@ -385,15 +379,12 @@ static void ir_learn_task(void *arg)
                     }
                     else
                     {
-                        // Nếu hết timeout và đã học ít nhất 1 sub → kết thúc
                         if (learn_param->ctx->learned_sub > 0)
                         {
                             break;
                         }
                     }
                 }
-
-                // ✅ Sau khi học xong, kiểm tra tính hợp lệ
                 ir_learn_list_lock(learn_param->ctx, 0);
                 esp_err_t ret = ir_learn_check_valid(&learn_param->ctx->learn_list,
                                                      &learn_param->ctx->learn_result);
@@ -401,15 +392,18 @@ static void ir_learn_task(void *arg)
 
                 if (ret == ESP_OK)
                 {
-                    ESP_LOGI("IR_LEARN", "✅ Học thành công");
+                    ESP_LOGI(TAG,"Learning completed successfully with %d commands",
+                             learn_param->ctx->learned_count);
                     if (learn_param->user_cb)
                     {
                         learn_param->user_cb(IR_LEARN_STATE_END, 0, &learn_param->ctx->learn_result);
                     }
+                    ir_event.event = IR_EVENT_LEARN_DONE;
+                    xQueueSend(ir_trans_queue, &ir_event, portMAX_DELAY);
                 }
                 else
                 {
-                    ESP_LOGE("IR_LEARN", "❌ Học thất bại");
+                    ESP_LOGE(TAG, "Learning failed, invalid data");
                     if (learn_param->user_cb)
                     {
                         learn_param->user_cb(IR_LEARN_STATE_FAIL, 0, NULL);
@@ -418,22 +412,10 @@ static void ir_learn_task(void *arg)
                 ir_learn_pause(learn_param->ctx);
                 learn_param->ctx->running = false;
             }
-
-            // 🧨 Dọn task nếu có lệnh xóa
-            else if (event == IR_EVENT_EXIT || event == LEARN_TASK_DELETE)
-            {
-                ESP_LOGI("IR_LEARN", "👋 Thoát khỏi task học IR");
-                learn_param->ctx->running = false;
-                if (learn_param->user_cb)
-                {
-                    learn_param->user_cb(IR_LEARN_STATE_EXIT, 0, NULL);
-                }
-                ir_learn_destroy(learn_param->ctx);
-                vTaskDelete(NULL);
-            }
         }
     }
     free(learn_param);
+    vTaskDelete(NULL);
 }
 
 esp_err_t ir_learn_add_sub_list_node(struct ir_learn_sub_list_head *sub_head, uint32_t timediff, const rmt_rx_done_event_data_t *symbol)

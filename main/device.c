@@ -16,7 +16,7 @@
 #include "ir_learn.h"
 
 static const char *TAG = "device";
-extern QueueHandle_t ir_event_queue; // Queue to handle IR transmit events
+extern QueueHandle_t ir_trans_queue; // Queue to handle IR transmit events
 extern QueueHandle_t ir_learn_queue; // Queue to handle IR learn events
 
 bool light_flag = false; // Flag to control light state
@@ -25,17 +25,23 @@ static void button_event_cb(void *arg, void *data)
 {
     button_event_t button_event = iot_button_get_event(arg);
     ESP_LOGI(TAG, "%s", iot_button_get_event_str(button_event));
-    ir_event_t event;
+    ir_event_cmd_t ir_event;
 
     if(BUTTON_SINGLE_CLICK == button_event)
     {
-        event = IR_EVENT_TRANSMIT;
-        xQueueSend(ir_event_queue, &event, portMAX_DELAY);
+        ir_event = (ir_event_cmd_t){
+            .event = IR_EVENT_TRANSMIT,
+            .key = "none" // Key for the button event
+        };
+        xQueueSend(ir_trans_queue, &ir_event, portMAX_DELAY);
     }
     else if (BUTTON_LONG_PRESS_START == button_event)
     {
-        event = IR_EVENT_LEARN;
-        xQueueSend(ir_learn_queue, &event, portMAX_DELAY);
+        ir_event = (ir_event_cmd_t){
+            .event = IR_EVENT_LEARN,
+            .key = "none" // Key for the button event
+        };
+        xQueueSend(ir_learn_queue, &ir_event, portMAX_DELAY);
     }
 }
 void config_btn_gpio()

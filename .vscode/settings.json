@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "stdio.h": "c",
-        "device.h": "c"
+        "device.h": "c",
+        "ios": "c"
     }
 }

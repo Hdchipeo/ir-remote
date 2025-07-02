@@ -12,5 +12,7 @@
 
 
 esp_err_t ir_task_start(void);
+void list_ir_keys_from_nvs(void);
+esp_err_t delete_ir_key_from_nvs(const char *key);
 
 

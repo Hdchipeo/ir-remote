@@ -27,7 +27,7 @@
 #include "ir_remote.h"
 #include "device.h"
 
-//static const int DELETE_END = BIT1;
+// static const int DELETE_END = BIT1;
 
 #define NVS_IR_NAMESPACE "ir-storage"
 
@@ -35,9 +35,9 @@ static const char *TAG = "ir_learn";
 static ir_learn_handle_t handle = NULL;
 rmt_channel_handle_t tx_channel = NULL;
 rmt_encoder_handle_t raw_encoder = NULL;
-nvs_handle_t nvs_ir_handle;              /**< IR learn handle */
+nvs_handle_t nvs_ir_handle;                   /**< IR learn handle */
 static struct ir_learn_sub_list_head ir_data; /**< IR learn test result */
-QueueHandle_t ir_event_queue = NULL;
+QueueHandle_t ir_trans_queue = NULL;
 QueueHandle_t ir_learn_queue = NULL;
 extern bool light_flag; // Flag to control light state
 
@@ -88,7 +88,7 @@ static esp_err_t save_ir_list_to_nvs(const char *key, struct ir_learn_sub_list_h
     }
 
     // Lưu vào NVS
-    
+
     esp_err_t err = nvs_open(NVS_IR_NAMESPACE, NVS_READWRITE, &nvs_ir_handle);
     if (err != ESP_OK)
     {
@@ -168,35 +168,94 @@ static esp_err_t load_ir_symbols_from_nvs(const char *key, struct ir_learn_sub_l
     free(buffer);
     return ESP_OK;
 }
-int ir_learn_sub_list_len(struct ir_learn_sub_list_head *list) {
+int ir_learn_sub_list_len(struct ir_learn_sub_list_head *list)
+{
     int count = 0;
     struct ir_learn_sub_list_t *it;
-    SLIST_FOREACH(it, list, next) {
+    SLIST_FOREACH(it, list, next)
+    {
         count++;
     }
     return count;
 }
-static void ir_learn_save(struct ir_learn_sub_list_head *data_save, struct ir_learn_sub_list_head *data_src)
+static void ir_learn_save(struct ir_learn_sub_list_head *data_save, struct ir_learn_sub_list_head *data_src, const char *key)
 {
-   assert(data_src && "data_src is null");
+    assert(data_src && "data_src is null");
 
     struct ir_learn_sub_list_t *sub_it;
-    SLIST_FOREACH(sub_it, data_src, next) {
+    SLIST_FOREACH(sub_it, data_src, next)
+    {
         ir_learn_add_sub_list_node(data_save, sub_it->timediff, &sub_it->symbols);
     }
 
-    save_ir_list_to_nvs("on_ac", data_save);
-    ESP_LOGI(TAG, "✅ IR learn result saved to NVS (with %d entries)", ir_learn_sub_list_len(data_save));
+    save_ir_list_to_nvs(key, data_save);
+    ESP_LOGI(TAG, "IR symbols saved to NVS with key: %s", key);
 }
-static void ir_learn_load(struct ir_learn_sub_list_head *data_load)
+static void ir_learn_load(struct ir_learn_sub_list_head *data_load, const char *key)
 {
-    esp_err_t ret = load_ir_symbols_from_nvs("on_ac", data_load);
+    ESP_LOGI(TAG, "IR symbols loaded from NVS with key: %s", key);
+
+    esp_err_t ret = load_ir_symbols_from_nvs(key, data_load);
     if (ret != ESP_OK)
     {
         ESP_LOGE(TAG, "Failed to load IR symbols from NVS, ret: %s", esp_err_to_name(ret));
         return;
     }
-    ESP_LOGI(TAG, "IR symbols loaded from NVS");
+}
+void list_ir_keys_from_nvs(void)
+{
+    esp_err_t err;
+    nvs_iterator_t it = NULL;
+
+    // Find all keys (any namespace, any type)
+    err = nvs_entry_find("nvs", NVS_IR_NAMESPACE, NVS_TYPE_ANY, &it);
+    ESP_LOGI(TAG, "nvs_entry_find result: %s", esp_err_to_name(err));
+    
+    int count = 0;
+
+    while (it != NULL)
+    {
+        count++;
+        nvs_entry_info_t info;
+        nvs_entry_info(it, &info);
+
+        ESP_LOGI("NVS", "Key: %-20s | Namespace: %-10s | Type: %d",
+                 info.key, info.namespace_name, info.type);
+
+        err = nvs_entry_next(&it);
+        if (err == ESP_ERR_NVS_NOT_FOUND)
+            break;
+        if (err != ESP_OK)
+        {
+            ESP_LOGE("NVS", "Error iterating NVS: %s", esp_err_to_name(err));
+            break;
+        }
+    }
+    ESP_LOGI("NVS", "Total IR keys found: %d", count);
+
+    nvs_release_iterator(it);
+}
+esp_err_t delete_ir_key_from_nvs(const char *key)
+{
+    if (!key)
+    {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    esp_err_t err = nvs_open(NVS_IR_NAMESPACE, NVS_READWRITE, &nvs_ir_handle);
+    if (err != ESP_OK)
+    {
+        return err;
+    }
+
+    err = nvs_erase_key(nvs_ir_handle, key);
+    if (err == ESP_OK)
+    {
+        err = nvs_commit(nvs_ir_handle);
+    }
+
+    nvs_close(nvs_ir_handle);
+    return err;
 }
 static esp_err_t ir_tx_init(void)
 {
@@ -235,7 +294,6 @@ static void rmt_tx_stop(void)
     raw_encoder->del(raw_encoder);
 }
 
-
 static void ir_send_raw(struct ir_learn_sub_list_head *rmt_out)
 {
     struct ir_learn_sub_list_t *sub_it;
@@ -259,28 +317,34 @@ static void ir_send_raw(struct ir_learn_sub_list_head *rmt_out)
     }
     rmt_tx_stop();
     ESP_LOGI(TAG, "IR transmission completed");
-
 }
 static void ir_learn_tx_task(void *arg)
 {
-    ir_event_t ir_event = IR_EVENT_NONE;
-    ir_event_queue = xQueueCreate(5, sizeof(ir_event_t));
-    ir_learn_queue = xQueueCreate(5, sizeof(ir_event_t));
+
+    ir_trans_queue = xQueueCreate(5, sizeof(ir_event_cmd_t));
+    ir_learn_queue = xQueueCreate(5, sizeof(ir_event_cmd_t));
+
+    ir_event_cmd_t ir_event;
 
     while (1)
     {
-        if (xQueueReceive(ir_event_queue, &ir_event, portMAX_DELAY) == pdPASS)
+        if (xQueueReceive(ir_trans_queue, &ir_event, portMAX_DELAY) == pdPASS)
         {
-            if(ir_event == IR_EVENT_TRANSMIT)
+            if (ir_event.event == IR_EVENT_TRANSMIT)
             {
-                ESP_LOGI(TAG, "IR transmit detected");
-                ir_learn_load(&ir_data);
+                ESP_LOGI(TAG, "IR transmit command for key: %s", ir_event.key);
+                ir_learn_load(&ir_data, ir_event.key);
                 ir_send_raw(&ir_data);
                 ir_learn_clean_sub_data(&ir_data);
             }
+            else if (ir_event.event == IR_EVENT_LEARN_DONE)
+            {
+                ir_learn_save(&ir_data, &ir_data, ir_event.key);
+                ir_learn_print_raw(&ir_data);
+            }
             else
             {
-                ESP_LOGW(TAG, "Unexpected event: %d", ir_event);
+                ESP_LOGW(TAG, "Unknown IR event: %d", ir_event.event);
             }
         }
     }
@@ -299,8 +363,6 @@ static void ir_send_cb(ir_learn_state_t state, uint8_t sub_step, struct ir_learn
         break;
     case IR_LEARN_STATE_END:
         ESP_LOGI(TAG, "IR Learn end");
-        ir_learn_save(&ir_data, data);
-        ir_learn_print_raw(&ir_data);
         light_flag = false; // Turn off light when exiting
         break;
     case IR_LEARN_STATE_FAIL:
@@ -322,7 +384,7 @@ static esp_err_t ir_learn_init_task(ir_learn_result_cb cb)
 
     const ir_learn_cfg_t config = {
         .learn_count = IR_LEARN_COUNT,
-        .task_stack = 4096*3,
+        .task_stack = 4096 * 3,
         .task_priority = 5,
         .task_affinity = 1,
         .callback = cb,
