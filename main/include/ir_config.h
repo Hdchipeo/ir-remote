@@ -20,17 +20,12 @@ extern "C" {
 /**
  * @brief GPIO number used for IR transmission.
  */
-#define IR_TX_GPIO_NUM GPIO_NUM_5
+#define IR_TX_GPIO_NUM CONFIG_IR_TX_GPIO
 
 /**
  * @brief GPIO number used for IR reception.
  */
-#define IR_RX_GPIO_NUM GPIO_NUM_4
-
-/**
- * @brief GPIO number for button used to trigger IR transmission.
- */
-#define IR_TX_BUTTON GPIO_NUM_15
+#define IR_RX_GPIO_NUM CONFIG_IR_RX_GPIO
 
 /**
  * @brief Number of times to learn the IR signal before saving.

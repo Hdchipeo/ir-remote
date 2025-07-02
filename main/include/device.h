@@ -11,7 +11,11 @@ extern "C" {
 /**
  * @brief GPIO pin used to indicate the light state.
  */
-#define LIGHT_STATE GPIO_NUM_18
+#define LIGHT_STATE CONFIG_LIGHT_STATE_GPIO
+/**
+ * @brief GPIO number for button used to trigger IR transmission.
+ */
+#define IR_BUTTON CONFIG_BUTTON_GPIO
 
 /**
  * @brief Initialize device peripherals (e.g., GPIOs, LEDs, buttons).

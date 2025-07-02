@@ -121,6 +121,7 @@ static void ir_learn_tx_task(void *arg)
                 break;
             case IR_EVENT_LEARN_DONE:
                 ir_learn_save(&ir_data, ir_event.data, ir_event.key);
+                ir_learn_clean_sub_data(&ir_data);
                 if (strcmp(ir_event.key, "unknow") != 0)
                 {
                     ESP_LOGI(TAG, "IR learn done for key: %s", ir_event.key);

@@ -11,8 +11,6 @@ idf_component_register(SRCS ${SOURCE} "main.c"
 		    PRIV_INCLUDE_DIRS "priv_include"
 		    PRIV_REQUIRES driver esp_timer nvs_flash button console spiffs)
 
-spiffs_create_partition_image(Storage "${CMAKE_CURRENT_SOURCE_DIR}/storage")
-
 include(package_manager)
 cu_pkg_define_version(${CMAKE_CURRENT_LIST_DIR})
 

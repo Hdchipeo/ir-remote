@@ -41,7 +41,7 @@ void config_btn_gpio()
 {
     const button_config_t btn_cfg = {0};
     const button_gpio_config_t btn_gpio_cfg = {
-        .gpio_num = IR_TX_BUTTON,
+        .gpio_num = IR_BUTTON,
         .active_level = 0,
     };
 
