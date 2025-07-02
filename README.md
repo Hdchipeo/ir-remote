@@ -60,24 +60,6 @@ Ensure:
 idf.py build flash monitor
 ```
 
-## Directory Structure
-
-```
-main/
-├── ir_learn.c          // IR learning logic
-├── ir_encoder.c        // IR sending logic
-├── ir_storage.c        // SPIFFS operations
-├── register_cmd.c      // Command registration
-├── device.c            // GPIO, button setup
-├── app_console.c       // Console initialization
-├── storage/            // Optional source folder
-├── spiffs/             // IR data files (optional)
-include/                // Public headers
-partitions_custom.csv   // Custom partition table
-CMakeLists.txt          // Build config
-README.md               // This file
-```
-
 ## SPIFFS Partition Table
 
 Example `partitions_custom.csv`:
@@ -101,7 +83,7 @@ Command-line control is available via UART:
 - `learn <key_name>`  
   Learn a new IR signal and save under the key.
 
-- `send <key_name>`  
+- `transmit <key_name>`  
   Send the signal saved under this key.
 
 - `list`  
