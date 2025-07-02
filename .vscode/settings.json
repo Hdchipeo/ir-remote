@@ -13,6 +13,10 @@
         "string_view": "c",
         "unordered_map": "c",
         "vector": "c",
-        "unistd.h": "c"
+        "unistd.h": "c",
+        "ir_learn.h": "c",
+        "string.h": "c",
+        "assert.h": "c",
+        "esp_now_hub.h": "c"
     }
 }

@@ -12,7 +12,7 @@
 #endif
 #endif
 
-#define PROMPT_STR "IR Remote"
+#define PROMPT_STR "IR_REMOTE_CMD"
 #define MAX_CMDLINE_LENGTH 1024
 
 static const char *TAG = "App_console";

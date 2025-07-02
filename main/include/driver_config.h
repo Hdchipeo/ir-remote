@@ -20,7 +20,7 @@ extern "C" {
 /**
  * @brief Initialize device peripherals (e.g., GPIOs, LEDs, buttons).
  */
-void app_device_init(void);
+void app_driver_init();
 
 /**
  * @brief Set the light state using a specific GPIO.

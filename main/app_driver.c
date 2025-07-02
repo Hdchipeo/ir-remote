@@ -11,7 +11,7 @@
 #include "button_gpio.h"
 #include "driver/gpio.h"
 #include "esp_log.h"
-#include "device.h"
+#include "driver_config.h"
 #include "ir_config.h"
 #include "ir_learn.h"
 
@@ -93,7 +93,7 @@ static void light_state_task(void *arg)
     }
     vTaskDelete(NULL);
 }
-void app_device_init()
+void app_driver_init()
 {
     ESP_LOGI(TAG, "Initializing device...");
     config_btn_gpio();         // Configure button GPIO

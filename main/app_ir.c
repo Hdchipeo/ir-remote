@@ -26,16 +26,20 @@
 #include "ir_learn.h"
 #include "ir_encoder.h"
 #include "ir_config.h"
-#include "device.h"
+#include "driver_config.h"
 #include "ir_storage.h"
 
 static const char *TAG = "IR_learn";
+
 static ir_learn_handle_t handle = NULL;
-rmt_channel_handle_t tx_channel = NULL;
-rmt_encoder_handle_t raw_encoder = NULL;                /**< IR learn handle */
 static struct ir_learn_sub_list_head ir_data; /**< IR learn test result */
+
+rmt_channel_handle_t tx_channel = NULL;
+rmt_encoder_handle_t raw_encoder = NULL;      /**< IR learn handle */
+
 QueueHandle_t ir_trans_queue = NULL;
 QueueHandle_t ir_learn_queue = NULL;
+
 extern bool light_flag; // Flag to control light state
 
 static esp_err_t ir_tx_init(void)
