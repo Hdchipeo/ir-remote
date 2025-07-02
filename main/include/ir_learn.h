@@ -41,6 +41,7 @@ extern "C"
         IR_EVENT_RECEIVE,
         IR_EVENT_RECEIVE_DONE,
         IR_EVENT_TRANSMIT,
+        IR_EVENT_SET_NAME,
         IR_EVENT_RESET,
         IR_EVENT_EXIT
     } ir_event_t;
@@ -48,6 +49,7 @@ extern "C"
     typedef struct {
         ir_event_t event;
         const char *key;
+        struct ir_learn_sub_list_head *data;
     } ir_event_cmd_t;
 
     /**

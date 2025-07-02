@@ -2,7 +2,7 @@
 #include <string.h>
 
 #include "esp_log.h"
-#include "ir_remote.h" 
+#include "ir_config.h" 
 #include "device.h"
 #include "console.h"
 

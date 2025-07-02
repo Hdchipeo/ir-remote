@@ -1,0 +1,49 @@
+[1/10] Building C object esp-idf/main/CMakeFiles/__idf_main.dir/device.c.obj
+[2/10] Building C object esp-idf/main/CMakeFiles/__idf_main.dir/register_cmd.c.obj
+[3/10] Building C object esp-idf/main/CMakeFiles/__idf_main.dir/ir_remote.c.obj
+[4/10] Building C object esp-idf/main/CMakeFiles/__idf_main.dir/ir_learn.c.obj
+[5/10] Linking C static library esp-idf/main/libmain.a
+[6/10] Generating ld/sections.ld
+[7/10] Linking CXX executable ir-learn.elf
+[8/10] Generating binary image from built executable
+esptool.py v4.8.1
+Creating esp32 image...
+Merged 2 ELF sections
+Successfully created esp32 image.
+Generated /Users/dangminhtam/esp32-test/ir-remote/build/ir-learn.bin
+[9/10] cd /Users/dangminhtam/esp32-test/ir-remote/build/esp-idf/esptool_py && /Users/dangminhtam/.espressif/python_env/idf5.3_py3.13_env/bin/python /Users/dangminhtam/esp/esp-idf/components/partition_table/check_sizes.py --offset 0xc000 partition --type app /Users/dangminhtam/esp32-test/ir-remote/build/partition_table/partition-table.bin /Users/dangminhtam/esp32-test/ir-remote/build/ir-learn.bin
+ir-learn.bin binary size 0x50b30 bytes. Smallest app partition is 0x180000 bytes. 0x12f4d0 bytes (79%) free.
+[9/10] cd /Users/dangminhtam/esp/esp-idf/components/esptool_py && /opt/local/bin/cmake -D IDF_PATH=/Users/dangminhtam/esp/esp-idf -D "SERIAL_TOOL=/Users/dangminhtam/.espressif/python_env/idf5.3_py3.13_env/bin/python;;/Users/dangminhtam/esp/esp-idf/components/esptool_py/esptool/esptool.py;--chip;esp32" -D "SERIAL_TOOL_ARGS=--before=default_reset;--after=hard_reset;write_flash;@app-flash_args" -D WORKING_DIRECTORY=/Users/dangminhtam/esp32-test/ir-remote/build -P /Users/dangminhtam/esp/esp-idf/components/esptool_py/run_serial_tool.cmake
+esptool.py --chip esp32 -p /dev/cu.usbserial-2120 -b 460800 --before=default_reset --after=hard_reset write_flash --flash_mode dio --flash_freq 40m --flash_size 4MB 0x20000 ir-learn.bin
+esptool.py v4.8.1
+Serial port /dev/cu.usbserial-2120
+Connecting....
+Chip is ESP32-D0WD-V3 (revision v3.1)
+Features: WiFi, BT, Dual Core, 240MHz, VRef calibration in efuse, Coding Scheme None
+Crystal is 40MHz
+MAC: e4:65:b8:11:7f:9c
+Uploading stub...
+Running stub...
+Stub running...
+Changing baud rate to 460800
+Changed.
+Configuring flash size...
+Flash will be erased from 0x00020000 to 0x00070fff...
+Compressed 330544 bytes to 183864...
+Writing at 0x00020000... (8 %)
+Writing at 0x0002cc80... (16 %)
+Writing at 0x000344c1... (25 %)
+Writing at 0x0003a31d... (33 %)
+Writing at 0x0003fce9... (41 %)
+Writing at 0x00045c1a... (50 %)
+Writing at 0x0004c280... (58 %)
+Writing at 0x00054d6b... (66 %)
+Writing at 0x0005c67b... (75 %)
+Writing at 0x00063372... (83 %)
+Writing at 0x00069332... (91 %)
+Writing at 0x0006f3c7... (100 %)
+Wrote 330544 bytes (183864 compressed) at 0x00020000 in 4.7 seconds (effective 563.7 kbit/s)...
+Hash of data verified.
+
+Leaving...
+Hard resetting via RTS pin...

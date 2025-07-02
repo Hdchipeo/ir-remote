@@ -2,6 +2,17 @@
     "files.associations": {
         "stdio.h": "c",
         "device.h": "c",
-        "ios": "c"
+        "ios": "c",
+        "__bit_reference": "c",
+        "__hash_table": "c",
+        "__split_buffer": "c",
+        "array": "c",
+        "deque": "c",
+        "initializer_list": "c",
+        "string": "c",
+        "string_view": "c",
+        "unordered_map": "c",
+        "vector": "c",
+        "unistd.h": "c"
     }
 }

@@ -1,0 +1,74 @@
+CMake Deprecation Warning at /Users/dangminhtam/esp/esp-idf/components/mbedtls/mbedtls/CMakeLists.txt:21 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+
+
+Traceback (most recent call last):
+  File "/Users/dangminhtam/esp/esp-idf/components/partition_table/parttool.py", line 363, in <module>
+    main()
+    ~~~~^^
+  File "/Users/dangminhtam/esp/esp-idf/components/partition_table/parttool.py", line 332, in main
+    target = ParttoolTarget(**target_args)
+  File "/Users/dangminhtam/esp/esp-idf/components/partition_table/parttool.py", line 97, in __init__
+    partition_table = gen.PartitionTable.from_csv(f.read())
+  File "/Users/dangminhtam/esp/esp-idf/components/partition_table/gen_esp32part.py", line 200, in from_csv
+    raise InputError('CSV Error at line %d: Partitions overlap. Partition sets offset 0x%x. '
+    ...<2 lines>...
+                     % (e.line_no, e.offset, offset_part_table, last_end))
+gen_esp32part.InputError: CSV Error at line 2: Partitions overlap. Partition sets offset 0x9000. But partition table occupies the whole sector 0xc000. Use a free offset 0xd000 or higher.
+Traceback (most recent call last):
+  File "/Users/dangminhtam/esp/esp-idf/components/partition_table/parttool.py", line 363, in <module>
+    main()
+    ~~~~^^
+  File "/Users/dangminhtam/esp/esp-idf/components/partition_table/parttool.py", line 332, in main
+    target = ParttoolTarget(**target_args)
+  File "/Users/dangminhtam/esp/esp-idf/components/partition_table/parttool.py", line 97, in __init__
+    partition_table = gen.PartitionTable.from_csv(f.read())
+  File "/Users/dangminhtam/esp/esp-idf/components/partition_table/gen_esp32part.py", line 200, in from_csv
+    raise InputError('CSV Error at line %d: Partitions overlap. Partition sets offset 0x%x. '
+    ...<2 lines>...
+                     % (e.line_no, e.offset, offset_part_table, last_end))
+gen_esp32part.InputError: CSV Error at line 2: Partitions overlap. Partition sets offset 0x9000. But partition table occupies the whole sector 0xc000. Use a free offset 0xd000 or higher.
+Traceback (most recent call last):
+  File "/Users/dangminhtam/esp/esp-idf/components/partition_table/parttool.py", line 363, in <module>
+    main()
+    ~~~~^^
+  File "/Users/dangminhtam/esp/esp-idf/components/partition_table/parttool.py", line 332, in main
+    target = ParttoolTarget(**target_args)
+  File "/Users/dangminhtam/esp/esp-idf/components/partition_table/parttool.py", line 97, in __init__
+    partition_table = gen.PartitionTable.from_csv(f.read())
+  File "/Users/dangminhtam/esp/esp-idf/components/partition_table/gen_esp32part.py", line 200, in from_csv
+    raise InputError('CSV Error at line %d: Partitions overlap. Partition sets offset 0x%x. '
+    ...<2 lines>...
+                     % (e.line_no, e.offset, offset_part_table, last_end))
+gen_esp32part.InputError: CSV Error at line 2: Partitions overlap. Partition sets offset 0x9000. But partition table occupies the whole sector 0xc000. Use a free offset 0xd000 or higher.
+Traceback (most recent call last):
+  File "/Users/dangminhtam/esp/esp-idf/components/partition_table/parttool.py", line 363, in <module>
+    main()
+    ~~~~^^
+  File "/Users/dangminhtam/esp/esp-idf/components/partition_table/parttool.py", line 332, in main
+    target = ParttoolTarget(**target_args)
+  File "/Users/dangminhtam/esp/esp-idf/components/partition_table/parttool.py", line 97, in __init__
+    partition_table = gen.PartitionTable.from_csv(f.read())
+  File "/Users/dangminhtam/esp/esp-idf/components/partition_table/gen_esp32part.py", line 200, in from_csv
+    raise InputError('CSV Error at line %d: Partitions overlap. Partition sets offset 0x%x. '
+    ...<2 lines>...
+                     % (e.line_no, e.offset, offset_part_table, last_end))
+gen_esp32part.InputError: CSV Error at line 2: Partitions overlap. Partition sets offset 0x9000. But partition table occupies the whole sector 0xc000. Use a free offset 0xd000 or higher.
+Traceback (most recent call last):
+  File "/Users/dangminhtam/esp/esp-idf/components/partition_table/parttool.py", line 363, in <module>
+    main()
+    ~~~~^^
+  File "/Users/dangminhtam/esp/esp-idf/components/partition_table/parttool.py", line 332, in main
+    target = ParttoolTarget(**target_args)
+  File "/Users/dangminhtam/esp/esp-idf/components/partition_table/parttool.py", line 97, in __init__
+    partition_table = gen.PartitionTable.from_csv(f.read())
+  File "/Users/dangminhtam/esp/esp-idf/components/partition_table/gen_esp32part.py", line 200, in from_csv
+    raise InputError('CSV Error at line %d: Partitions overlap. Partition sets offset 0x%x. '
+    ...<2 lines>...
+                     % (e.line_no, e.offset, offset_part_table, last_end))
+gen_esp32part.InputError: CSV Error at line 2: Partitions overlap. Partition sets offset 0x9000. But partition table occupies the whole sector 0xc000. Use a free offset 0xd000 or higher.
