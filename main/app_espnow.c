@@ -6,6 +6,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 #include "freertos/timers.h"
+#include "freertos/queue.h"
 #include "nvs_flash.h"
 #include "esp_random.h"
 #include "esp_event.h"
@@ -17,12 +18,19 @@
 #include "esp_now.h"
 #include "esp_crc.h"
 #include "espnow_config.h"
+#include "device.h"
+#include "ir_config.h"
+#include "ir_learn.h"
+#include "ir_storage.h"
 
 static const char *TAG = "Esp-now";
 
 static QueueHandle_t s_espnow_queue = NULL;
+extern QueueHandle_t ir_trans_queue;
 
 static uint8_t broadcast_mac[ESP_NOW_ETH_ALEN] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+
+device_state_t g_device_state;
 
 static esp_err_t espnow_add_peer(uint8_t *mac_addr, bool encrypt)
 {
@@ -111,6 +119,29 @@ static void espnow_recv_cb(const esp_now_recv_info_t *recv_info, const uint8_t *
         free(recv_cb->data);
     }
 }
+static void update_and_send_device_state(device_state_t *state)
+{
+    if (state == NULL)
+    {
+        ESP_LOGE(TAG, "Device state is NULL");
+        return;
+    }
+    ir_event_cmd_t ir_event;
+
+    // Update the device state
+    save_device_state_to_nvs(state);
+
+    ir_state_get_key(state, ir_event.key, IR_KEY_MAX_LEN);
+    if (ir_event.key == NULL)
+    {
+        ESP_LOGE(TAG, "Failed to get IR key");
+        return;
+    }
+
+    ir_event.event = IR_EVENT_TRANSMIT;
+    xQueueSend(ir_trans_queue, &ir_event, portMAX_DELAY);
+    ESP_LOGI(TAG, "Send IR key %s to TX Task", ir_event.key);
+}
 static void espnow_task(void *pvParameter)
 {
     espnow_event_t evt;
@@ -125,7 +156,13 @@ static void espnow_task(void *pvParameter)
         }
         case ESPNOW_RECV_CB:
         {
+            espnow_event_recv_cb_t *recv_cb = &evt.info.recv_cb;
+            ESP_LOGI(TAG, "Receive ESPNOW data from: " MACSTR ", len: %d",
+                     MAC2STR(recv_cb->mac_addr), recv_cb->data_len);
 
+            ir_state_handle_command(&g_device_state, *(ir_command_packet_t *)recv_cb->data);
+            update_and_send_device_state(&g_device_state);
+            free(recv_cb->data);
             break;
         }
         default:

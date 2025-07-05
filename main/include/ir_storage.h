@@ -7,6 +7,7 @@
 extern "C" {
 #endif
 
+#define NVS_IR_NAMESPACE "ir-nvs-storage"
 /**
  * @brief Save IR learning data to SPIFFS storage.
  * 
@@ -57,6 +58,22 @@ esp_err_t rename_ir_key_in_spiffs(const char *old_key, const char *new_key);
  * @return ESP_OK on success
  */
 esp_err_t spiffs_init(void);
+
+/**
+ * @brief Save device state to NVS.
+ * 
+ * @param state Device state to save
+ * @return ESP_OK on success
+ */
+esp_err_t save_device_state_to_nvs(device_state_t *state);
+
+/**
+ * @brief Load device state from NVS.
+ * 
+ * @param state Pointer to the device state structure to fill
+ * @return ESP_OK on success
+ */
+esp_err_t load_device_state_from_nvs(device_state_t *state);
 
 #ifdef __cplusplus
 }

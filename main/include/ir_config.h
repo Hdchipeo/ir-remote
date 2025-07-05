@@ -11,6 +11,17 @@ extern "C" {
 #endif
 
 /**
+ * @file ir_config.h
+ * @brief Configuration for IR learning and transmission.
+ * 
+ * This file contains definitions and configurations for IR signal learning,
+ * transmission, and reception using ESP-IDF.
+ */
+
+// Maximum length of the IR key used for identifying learned signals.
+#define IR_KEY_MAX_LEN 64
+
+/**
  * @brief IR signal resolution in Hz.
  * 
  * 1 MHz resolution means each tick represents 1 microsecond.

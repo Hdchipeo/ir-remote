@@ -7,11 +7,12 @@
 #include "esp_err.h"
 #include "esp_log.h"
 #include "esp_check.h"
+#include "nvs.h"
+#include "nvs_flash.h"
 
 #include "esp_spiffs.h"
 #include "ir_learn.h"
-
-#define NVS_IR_NAMESPACE "ir-storage"
+#include "ir_storage.h"
 
 static const char *TAG = "IR_storage";
 
@@ -254,5 +255,63 @@ esp_err_t spiffs_init(void)
 
     ESP_LOGI(TAG, "SPIFFS mounted successfully. Total: %d bytes, Used: %d bytes", total_bytes, used_bytes);
 
+    return ESP_OK;
+}
+esp_err_t save_device_state_to_nvs(device_state_t *state)
+{
+    nvs_handle_t nvs_handle;
+    esp_err_t err = nvs_open(NVS_IR_NAMESPACE, NVS_READWRITE, &nvs_handle);
+    if (err != ESP_OK)
+    {
+        ESP_LOGE(TAG, "Failed to open NVS (%s)", esp_err_to_name(err));
+        return err;
+    }
+
+    err = nvs_set_blob(nvs_handle, "device_state", state, sizeof(device_state_t));
+    if (err != ESP_OK)
+    {
+        ESP_LOGE(TAG, "Failed to save device state to NVS (%s)", esp_err_to_name(err));
+        nvs_close(nvs_handle);
+        return err;
+    }
+
+    err = nvs_commit(nvs_handle);
+    if (err != ESP_OK)
+    {
+        ESP_LOGE(TAG, "Failed to commit NVS changes (%s)", esp_err_to_name(err));
+    }
+
+    nvs_close(nvs_handle);
+    return err;
+}
+esp_err_t load_device_state_from_nvs(device_state_t *state)
+{
+    if (!state)
+        return ESP_ERR_INVALID_ARG;
+
+    nvs_handle_t nvs_handle;
+    esp_err_t err = nvs_open(NVS_IR_NAMESPACE, NVS_READONLY, &nvs_handle);
+    if (err != ESP_OK)
+    {
+        ESP_LOGE(TAG, "Failed to open NVS (%s)", esp_err_to_name(err));
+        return err;
+    }
+
+    size_t required_size = sizeof(device_state_t);
+    err = nvs_get_blob(nvs_handle, "device_state", state, &required_size);
+    if (err == ESP_ERR_NVS_NOT_FOUND)
+    {
+        ESP_LOGW(TAG, "Device state not found in NVS");
+        nvs_close(nvs_handle);
+        return ESP_ERR_NOT_FOUND;
+    }
+    else if (err != ESP_OK)
+    {
+        ESP_LOGE(TAG, "Failed to read device state from NVS (%s)", esp_err_to_name(err));
+        nvs_close(nvs_handle);
+        return err;
+    }
+
+    nvs_close(nvs_handle);
     return ESP_OK;
 }
