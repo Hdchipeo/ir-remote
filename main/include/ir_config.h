@@ -50,6 +50,8 @@ extern "C" {
  */
 esp_err_t ir_task_start(void);
 
+void ir_send_raw(struct ir_learn_sub_list_head *rmt_out);
+
 #ifdef __cplusplus
 }
 #endif

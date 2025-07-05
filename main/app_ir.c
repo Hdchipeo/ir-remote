@@ -19,9 +19,6 @@
 #include "esp_system.h"
 #include "esp_spiffs.h"
 
-#include "driver/rmt_tx.h"
-#include "driver/rmt_rx.h"
-
 /* IR learn includes */
 #include "ir_learn.h"
 #include "ir_encoder.h"
@@ -29,80 +26,44 @@
 #include "driver_config.h"
 #include "ir_storage.h"
 
-static const char *TAG = "IR_learn";
+static const char *TAG = "App_IR_learn";
 
 static ir_learn_handle_t handle = NULL;
-static struct ir_learn_sub_list_head ir_data; /**< IR learn test result */
-
-rmt_channel_handle_t tx_channel = NULL;
-rmt_encoder_handle_t raw_encoder = NULL;      /**< IR learn handle */
+static struct ir_learn_sub_list_head ir_data;
 
 QueueHandle_t ir_trans_queue = NULL;
 QueueHandle_t ir_learn_queue = NULL;
 
 extern bool light_flag; // Flag to control light state
 
-static esp_err_t ir_tx_init(void)
+static void ir_send_cb(ir_learn_state_t state, uint8_t sub_step, struct ir_learn_sub_list_head *data)
 {
-    rmt_tx_channel_config_t tx_channel_cfg = {
-        .clk_src = RMT_CLK_SRC_DEFAULT,
-        .resolution_hz = IR_RESOLUTION_HZ,
-        .mem_block_symbols = 128,
-        .trans_queue_depth = 4,
-        .gpio_num = IR_TX_GPIO_NUM,
-        .flags.with_dma = false,
-    };
-    ESP_ERROR_CHECK(rmt_new_tx_channel(&tx_channel_cfg, &tx_channel));
-
-    rmt_carrier_config_t carrier_cfg = {
-        .duty_cycle = 0.33,
-        .frequency_hz = 38000, // 38KHz
-    };
-    ESP_ERROR_CHECK(rmt_apply_carrier(tx_channel, &carrier_cfg));
-
-    ir_encoder_config_t raw_encoder_cfg = {
-        .resolution = IR_RESOLUTION_HZ,
-    };
-    ESP_ERROR_CHECK(ir_encoder_new(&raw_encoder_cfg, &raw_encoder));
-
-    return ESP_OK;
-}
-static void rmt_tx_start(void)
-{
-    ir_tx_init();
-    ESP_ERROR_CHECK(rmt_enable(tx_channel));
-}
-static void rmt_tx_stop(void)
-{
-    ESP_ERROR_CHECK(rmt_disable(tx_channel));
-    rmt_del_channel(tx_channel);
-    raw_encoder->del(raw_encoder);
-}
-
-static void ir_send_raw(struct ir_learn_sub_list_head *rmt_out)
-{
-    struct ir_learn_sub_list_t *sub_it;
-
-    rmt_transmit_config_t transmit_cfg = {
-        .loop_count = 0, // no loop
-    };
-
-    rmt_tx_start();
-    ESP_LOGI(TAG, "Starting IR transmission...");
-
-    SLIST_FOREACH(sub_it, rmt_out, next)
+    switch (state)
     {
-        vTaskDelay(pdMS_TO_TICKS(sub_it->timediff / 1000));
-
-        rmt_symbol_word_t *rmt_symbols = sub_it->symbols.received_symbols;
-        size_t symbol_num = sub_it->symbols.num_symbols;
-
-        ESP_ERROR_CHECK(rmt_transmit(tx_channel, raw_encoder, rmt_symbols, symbol_num, &transmit_cfg));
-        rmt_tx_wait_all_done(tx_channel, -1);
+    case IR_LEARN_STATE_READY:
+        ESP_LOGI(TAG, "IR Learn ready");
+        light_flag = true; // Turn on light when ready
+        break;
+    case IR_LEARN_STATE_EXIT:
+        ESP_LOGI(TAG, "IR Learn exit");
+        break;
+    case IR_LEARN_STATE_END:
+        ESP_LOGI(TAG, "IR Learn end");
+        ir_learn_print_raw(data);
+        light_flag = false; // Turn off light when exiting
+        break;
+    case IR_LEARN_STATE_FAIL:
+        ESP_LOGE(TAG, "IR Learn failed, retry");
+        light_flag = false;
+        break;
+    case IR_LEARN_STATE_STEP:
+    default:
+        ESP_LOGI(TAG, "IR Learn step:[%d][%d]", state, sub_step);
+        break;
     }
-    rmt_tx_stop();
-    ESP_LOGI(TAG, "IR transmission completed");
+    return;
 }
+
 static void ir_learn_tx_task(void *arg)
 {
 
@@ -134,7 +95,6 @@ static void ir_learn_tx_task(void *arg)
                 {
                     ESP_LOGI(TAG, "Key IR is unknow, set name for IR learn command:");
                 }
-
                 break;
             case IR_EVENT_SET_NAME:
                 rename_ir_key_in_spiffs("unknow", ir_event.key);
@@ -146,33 +106,6 @@ static void ir_learn_tx_task(void *arg)
         }
     }
     vTaskDelete(NULL);
-}
-static void ir_send_cb(ir_learn_state_t state, uint8_t sub_step, struct ir_learn_sub_list_head *data)
-{
-    switch (state)
-    {
-    case IR_LEARN_STATE_READY:
-        ESP_LOGI(TAG, "IR Learn ready");
-        light_flag = true; // Turn on light when ready
-        break;
-    case IR_LEARN_STATE_EXIT:
-        ESP_LOGI(TAG, "IR Learn exit");
-        break;
-    case IR_LEARN_STATE_END:
-        ESP_LOGI(TAG, "IR Learn end");
-        ir_learn_print_raw(data);
-        light_flag = false; // Turn off light when exiting
-        break;
-    case IR_LEARN_STATE_FAIL:
-        ESP_LOGE(TAG, "IR Learn failed, retry");
-        light_flag = false;
-        break;
-    case IR_LEARN_STATE_STEP:
-    default:
-        ESP_LOGI(TAG, "IR Learn step:[%d][%d]", state, sub_step);
-        break;
-    }
-    return;
 }
 static esp_err_t ir_learn_init_task(ir_learn_result_cb cb)
 {

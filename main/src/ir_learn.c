@@ -284,6 +284,45 @@ esp_err_t ir_learn_clean_data(struct ir_learn_list_head *learn_head)
     return ESP_OK;
 }
 
+static bool ir_learn_process_rx_data(ir_learn_common_param_t *learn_param, rmt_rx_done_event_data_t *rx_data)
+{
+    int64_t cur_time = esp_timer_get_time();
+    size_t period = cur_time - learn_param->ctx->pre_time;
+    learn_param->ctx->pre_time = cur_time;
+
+    if (rx_data->num_symbols < 5) {
+        ESP_LOGW(TAG, "Signal too short, received symbols: %d", rx_data->num_symbols);
+        return false;
+    }
+    
+    if (period < 500 * 1000) {
+        learn_param->ctx->learned_sub++;
+    } else {
+        period = 0;
+        learn_param->ctx->learned_sub = 1;
+        learn_param->ctx->learned_count++;
+    }
+
+    ir_learn_list_lock(learn_param->ctx, 0);
+    if (learn_param->ctx->learned_sub == 1) {
+        ir_learn_add_list_node(&learn_param->ctx->learn_list);
+    }
+
+    struct ir_learn_list_t *last = SLIST_FIRST(&learn_param->ctx->learn_list);
+    while (SLIST_NEXT(last, next)) {
+        last = SLIST_NEXT(last, next);
+    }
+
+    ir_learn_add_sub_list_node(&last->cmd_sub_node, period, rx_data);
+    ir_learn_list_unlock(learn_param->ctx);
+
+    if (learn_param->ctx->callback) {
+        learn_param->ctx->callback(learn_param->ctx->learned_count, learn_param->ctx->learned_sub, &last->cmd_sub_node);
+    }
+
+    return true;
+}
+
 static void ir_learn_task(void *arg)
 {
     ir_learn_common_param_t *learn_param = (ir_learn_common_param_t *)arg;
@@ -414,7 +453,29 @@ static void ir_learn_task(void *arg)
                 learn_param->ctx->running = false;
             }
         }
+        else if (!learn_param->ctx->running)
+        {
+            rmt_rx_done_event_data_t passive_data;
+            if (xQueueReceive(learn_param->ctx->receive_queue, &passive_data, pdMS_TO_TICKS(10)) == pdTRUE)
+            {
+                ESP_LOGI(TAG, "Passive RX: received %d symbols", passive_data.num_symbols);
+                if (!ir_learn_process_rx_data(learn_param->ctx, &learn_data)) {
+                goto continue_rx;
+            }
+
+                rmt_receive(learn_param->ctx->channel_rx, learn_param->ctx->rmt_rx.received_symbols, learn_param->ctx->rmt_rx.num_symbols, &ir_learn_rmt_rx_cfg);
+            }
+            else if (learn_param->ctx->learned_sub > 0) {
+                break;
+            }
+        }
+
+    continue_rx:
+    rmt_receive(learn_param->ctx->channel_rx, learn_param->ctx->rmt_rx.received_symbols, learn_param->ctx->rmt_rx.num_symbols, &ir_learn_rmt_rx_cfg);
+
     }
+    
+    
     free(learn_param);
     vTaskDelete(NULL);
 }

@@ -47,7 +47,7 @@ static int ir_learn_cmd(int argc, char **argv)
         .event = IR_EVENT_LEARN,
         .key = ir_key_args.key->sval[0]};
     xQueueSend(ir_learn_queue, &IR_cmd, portMAX_DELAY);
-    ESP_LOGI(TAG, "IR learn command send for key: %s", ir_key_args.key->sval[0]);
+    ESP_LOGI(TAG, "IR learn command for key: %s", ir_key_args.key->sval[0]);
 
     return 0;
 }
