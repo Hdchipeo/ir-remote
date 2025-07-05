@@ -1,0 +1,17 @@
+[1/9] Performing build step for 'bootloader'
+[1/1] cd /Users/dangminhtam/esp32-test/ir-remote/build/bootloader/esp-idf/esptool_py && /Users/dangminhtam/.espressif/python_env/idf5.3_py3.13_env/bin/python /Users/dangminhtam/esp/esp-idf/components/partition_table/check_sizes.py --offset 0xc000 bootloader 0x1000 /Users/dangminhtam/esp32-test/ir-remote/build/bootloader/bootloader.bin
+Bootloader binary size 0x60b0 bytes. 0x4f50 bytes (45%) free.
+[2/9] Building C object esp-idf/main/CMakeFiles/__idf_main.dir/src/device.c.obj
+[3/9] No install step for 'bootloader'
+[4/9] Completed 'bootloader'
+[5/9] Linking C static library esp-idf/main/libmain.a
+[6/9] Generating ld/sections.ld
+[7/9] Linking CXX executable ir-learn.elf
+[8/9] Generating binary image from built executable
+esptool.py v4.8.1
+Creating esp32 image...
+Merged 2 ELF sections
+Successfully created esp32 image.
+Generated /Users/dangminhtam/esp32-test/ir-remote/build/ir-learn.bin
+[9/9] cd /Users/dangminhtam/esp32-test/ir-remote/build/esp-idf/esptool_py && /Users/dangminhtam/.espressif/python_env/idf5.3_py3.13_env/bin/python /Users/dangminhtam/esp/esp-idf/components/partition_table/check_sizes.py --offset 0xc000 partition --type app /Users/dangminhtam/esp32-test/ir-remote/build/partition_table/partition-table.bin /Users/dangminhtam/esp32-test/ir-remote/build/ir-learn.bin
+ir-learn.bin binary size 0x181b80 bytes. Smallest app partition is 0x1c0000 bytes. 0x3e480 bytes (14%) free.

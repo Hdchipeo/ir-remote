@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -32,6 +33,11 @@ extern "C"
         uint8_t temperature;
         fan_speed_t speed;
         ac_mode_t mode;
+
+        char power_str[4]; // "on"/"off"
+        char mode_str[8];  // "auto"/"cool"/...
+        int fan_speed;
+
     } ac_state_t;
 
     typedef struct
@@ -56,16 +62,17 @@ extern "C"
         // Add more device types as needed
     } device_type_t;
 
-    tydef struct device
+    typedef struct
     {
-        device_type_t type; // Type of device (e.g., AC, Fan, Light)
-        ac_state_t ac;         // Air Conditioner state
-        fan_state_t fan;       // Fan state
-        light_state_t light;   // Light state
+        device_type_t type;  // Type of device (e.g., AC, Fan, Light)
+        ac_state_t ac;       // Air Conditioner state
+        fan_state_t fan;     // Fan state
+        light_state_t light; // Light state
         // Add more device states as needed
     } device_state_t;
-    
-    typedef enum {
+
+    typedef enum
+    {
         AC_CMD_POWER_TOGGLE,
         AC_CMD_TEMP_UP,
         AC_CMD_TEMP_DOWN,
@@ -81,12 +88,13 @@ extern "C"
         Fan_CMD_OSCILLATION_TOGGLE,
 
         Light_CMD_POWER_TOGGLE
-        
+
     } ir_command_t;
-    
-    typedef struct {
+
+    typedef struct
+    {
         ir_command_t command;
-        int value;  
+        int value;
     } ir_command_packet_t;
 
     /**
@@ -95,12 +103,12 @@ extern "C"
     void ir_state_init(device_state_t *state);
 
     /**
-        * @brief Handle an IR command and update the AC state
-        *
-        * @param state The current AC state
-        * @param command The IR command to handle
-        */
-       void ir_state_handle_command(device_state_t *state, ir_command_packet_t packet)
+     * @brief Handle an IR command and update the AC state
+     *
+     * @param state The current AC state
+     * @param command The IR command to handle
+     */
+    void ir_state_handle_command(device_state_t *state, ir_command_packet_t packet);
 
     /**
      * @brief Get the IR key for the current state
@@ -109,7 +117,14 @@ extern "C"
      * @param out_key Output buffer for the IR key
      * @param max_len Maximum length of the output buffer
      */
-    void ir_state_get_key(device_state_t *state, char *out_key, size_t max_len)
+    void ir_state_get_key(device_state_t *state, char *out_key, size_t max_len);
+
+    /**
+     * @brief Update the device state from an IR key
+     * @param state The device state to update
+     * @param key The IR key to parse and update the state
+     */
+    void update_device_state_from_key(device_state_t *state, const char *key);
 
 #ifdef __cplusplus
 }

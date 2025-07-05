@@ -2,6 +2,7 @@
 
 #include "esp_err.h"
 #include "ir_learn.h"  // Make sure this contains the definition of struct ir_learn_sub_list_head
+#include "device.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -74,6 +75,14 @@ esp_err_t save_device_state_to_nvs(device_state_t *state);
  * @return ESP_OK on success
  */
 esp_err_t load_device_state_from_nvs(device_state_t *state);
+/**
+ * @brief Match IR data from SPIFFS with received IR data.
+ * 
+ * @param data_learn Pointer to the list of learned IR data
+ * @param matched_key_out Output buffer for the matched key (if found)
+ * @return true if a match is found, false otherwise
+ */
+bool match_ir_from_spiffs(const struct ir_learn_sub_list_head *data_learn, char *matched_key_out);
 
 #ifdef __cplusplus
 }

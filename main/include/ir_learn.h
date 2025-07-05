@@ -9,11 +9,21 @@
 #include <stdint.h>
 #include <sys/queue.h>
 #include "driver/rmt_types.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/queue.h"
+#include "freertos/event_groups.h"
+#include "freertos/semphr.h"
+#include "ir_config.h"
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
+
+#define RMT_RX_MEM_BLOCK_SIZE CONFIG_RMT_MEM_BLOCK_SYMBOLS
+#define RMT_DECODE_MARGIN CONFIG_RMT_DECODE_MARGIN_US
+#define RMT_MAX_RANGE_TIME CONFIG_RMT_SINGLE_RANGE_MAX_US
 
     /**
      * @brief Type of IR learn handle
@@ -46,9 +56,13 @@ extern "C"
         IR_EVENT_EXIT
     } ir_event_t;
 
-    typedef struct {
+    // Maximum length of the IR key used for identifying learned signals.
+#define IR_KEY_MAX_LEN 64
+
+    typedef struct
+    {
         ir_event_t event;
-        const char *key;
+        char key[IR_KEY_MAX_LEN]; /*!< Key name for IR command */
         struct ir_learn_sub_list_head *data;
     } ir_event_cmd_t;
 
@@ -123,6 +137,32 @@ extern "C"
         int task_stack;    /*!< IR learn task stack size */
         int task_affinity; /*!< IR learn task pinned to core (-1 is no affinity) */
     } ir_learn_cfg_t;
+
+    typedef struct
+    {
+        rmt_channel_handle_t channel_rx; /*!< rmt rx channel handler */
+        rmt_rx_done_event_data_t rmt_rx; /*!< received RMT symbols */
+
+        struct ir_learn_list_head learn_list;
+        struct ir_learn_sub_list_head learn_result;
+
+        EventGroupHandle_t learn_event;
+        SemaphoreHandle_t rmt_mux;
+        QueueHandle_t receive_queue; /*!< A queue used to send the raw data to the task from the ISR */
+        bool running;
+        uint32_t pre_time;
+
+        uint8_t learn_count;
+        uint8_t learned_count;
+        uint8_t learned_sub;
+
+    } ir_learn_t;
+
+    typedef struct
+    {
+        ir_learn_result_cb user_cb;
+        ir_learn_t *ctx;
+    } ir_learn_common_param_t;
 
     /**
      * @brief Create new IR learn handle.
@@ -227,6 +267,22 @@ extern "C"
      *
      */
     esp_err_t ir_learn_print_raw(struct ir_learn_sub_list_head *cmd_list);
+
+    /**
+     * @brief Stop IR RX.
+     * @param
+     *          - ESP_OK                  Stop process success.
+     *          - ESP_ERR_INVALID_ARG     Invalid device handle or argument.
+     */
+    void ir_rx_stop(void);
+
+    /**
+     * @brief Restart IR RX.
+     * @param [in] learn_param IR learn common parameters
+     *          - ESP_OK                  Restart process success.
+     *          - ESP_ERR_INVALID_ARG     Invalid device handle or argument.
+     */
+    void ir_rx_restart(ir_learn_common_param_t *learn_param);
 
 #ifdef __cplusplus
 }

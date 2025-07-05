@@ -25,6 +25,7 @@
 #include "ir_config.h"
 #include "driver_config.h"
 #include "ir_storage.h"
+#include "device.h"
 
 static const char *TAG = "App_IR_learn";
 
@@ -33,6 +34,9 @@ static struct ir_learn_sub_list_head ir_data;
 
 QueueHandle_t ir_trans_queue = NULL;
 QueueHandle_t ir_learn_queue = NULL;
+
+extern ir_learn_common_param_t *learn_param; // Pointer to the IR learn parameters
+extern device_state_t g_device_state; // Global device state
 
 extern bool light_flag; // Flag to control light state
 
@@ -79,10 +83,13 @@ static void ir_learn_tx_task(void *arg)
             switch (ir_event.event)
             {
             case IR_EVENT_TRANSMIT:
+                ir_rx_stop(); // Stop IR RX before transmitting
                 ESP_LOGI(TAG, "IR transmit command for key: %s", ir_event.key);
                 ir_learn_load(&ir_data, ir_event.key);
                 ir_send_raw(&ir_data);
+                update_device_state_from_key(&g_device_state, ir_event.key);
                 ir_learn_clean_sub_data(&ir_data);
+                ir_rx_restart(learn_param);
                 break;
             case IR_EVENT_LEARN_DONE:
                 ir_learn_save(&ir_data, ir_event.data, ir_event.key);
@@ -98,6 +105,20 @@ static void ir_learn_tx_task(void *arg)
                 break;
             case IR_EVENT_SET_NAME:
                 rename_ir_key_in_spiffs("unknow", ir_event.key);
+                break;
+            case IR_EVENT_RECEIVE:
+                ESP_LOGI(TAG, "IR receive event");
+                ir_data = *(struct ir_learn_sub_list_head *)ir_event.data;
+                char matched_key[32] = {0};
+                if(match_ir_from_spiffs(&ir_data, matched_key))
+                {
+                    ESP_LOGI(TAG, "Matched IR key: %s", matched_key);
+                    update_device_state_from_key(&g_device_state, matched_key);
+                }
+                else
+                {
+                    ESP_LOGW(TAG, "No matching IR key found");
+                }
                 break;
             default:
                 ESP_LOGW(TAG, "Unknown IR event: %d", ir_event.event);

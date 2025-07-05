@@ -127,17 +127,13 @@ static void update_and_send_device_state(device_state_t *state)
         return;
     }
     ir_event_cmd_t ir_event;
+    char key_buffer[IR_KEY_MAX_LEN] = {0};
 
     // Update the device state
     save_device_state_to_nvs(state);
 
-    ir_state_get_key(state, ir_event.key, IR_KEY_MAX_LEN);
-    if (ir_event.key == NULL)
-    {
-        ESP_LOGE(TAG, "Failed to get IR key");
-        return;
-    }
-
+    ir_state_get_key(state, key_buffer, IR_KEY_MAX_LEN);
+    strncpy(ir_event.key, key_buffer, IR_KEY_MAX_LEN);
     ir_event.event = IR_EVENT_TRANSMIT;
     xQueueSend(ir_trans_queue, &ir_event, portMAX_DELAY);
     ESP_LOGI(TAG, "Send IR key %s to TX Task", ir_event.key);
@@ -145,6 +141,13 @@ static void update_and_send_device_state(device_state_t *state)
 static void espnow_task(void *pvParameter)
 {
     espnow_event_t evt;
+
+    ir_state_init(&g_device_state);
+    if (load_device_state_from_nvs(&g_device_state) != ESP_OK)
+    {
+        ESP_LOGE(TAG, "Failed to load device state from NVS");
+        return;
+    }
 
     while (xQueueReceive(s_espnow_queue, &evt, portMAX_DELAY) == pdTRUE)
     {

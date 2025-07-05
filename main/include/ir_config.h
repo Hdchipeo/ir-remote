@@ -5,6 +5,7 @@
 #include <inttypes.h>
 #include "esp_err.h"
 #include "driver/gpio.h"
+#include "ir_learn.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -18,8 +19,10 @@ extern "C" {
  * transmission, and reception using ESP-IDF.
  */
 
-// Maximum length of the IR key used for identifying learned signals.
-#define IR_KEY_MAX_LEN 64
+
+
+// Maximum number of IR symbols that can be learned in a single command.
+#define IR_TOLERANCE_US 100 // Tolerance in microseconds for IR signal duration matching
 
 /**
  * @brief IR signal resolution in Hz.
@@ -49,6 +52,8 @@ extern "C" {
  * @return ESP_OK on success, or an error code on failure.
  */
 esp_err_t ir_task_start(void);
+
+struct ir_learn_sub_list_head;
 
 void ir_send_raw(struct ir_learn_sub_list_head *rmt_out);
 

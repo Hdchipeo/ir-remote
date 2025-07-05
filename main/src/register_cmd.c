@@ -26,7 +26,8 @@ static struct
     struct arg_end *end;
 } ir_key_args;
 
-typedef struct {
+typedef struct
+{
     struct arg_str *old_key;
     struct arg_str *new_key;
     struct arg_end *end;
@@ -45,7 +46,8 @@ static int ir_learn_cmd(int argc, char **argv)
 
     ir_event_cmd_t IR_cmd = {
         .event = IR_EVENT_LEARN,
-        .key = ir_key_args.key->sval[0]};
+    };
+    strncpy(IR_cmd.key, ir_key_args.key->sval[0], sizeof(IR_cmd.key));
     xQueueSend(ir_learn_queue, &IR_cmd, portMAX_DELAY);
     ESP_LOGI(TAG, "IR learn command for key: %s", ir_key_args.key->sval[0]);
 
@@ -61,8 +63,8 @@ static int ir_trans_cmd(int argc, char **argv)
     }
 
     ir_event_cmd_t IR_cmd = {
-        .event = IR_EVENT_TRANSMIT,
-        .key = ir_key_args.key->sval[0]};
+        .event = IR_EVENT_TRANSMIT};
+    strncpy(IR_cmd.key, ir_key_args.key->sval[0], sizeof(IR_cmd.key));
     xQueueSend(ir_trans_queue, &IR_cmd, portMAX_DELAY);
     ESP_LOGI(TAG, "IR transmit command send for key: %s", ir_key_args.key->sval[0]);
 
@@ -79,7 +81,8 @@ static int ir_input_name(int argc, char **argv)
 
     ir_event_cmd_t IR_cmd = {
         .event = IR_EVENT_SET_NAME,
-        .key = ir_key_args.key->sval[0]};
+    };
+    strncpy(IR_cmd.key, ir_key_args.key->sval[0], sizeof(IR_cmd.key));
     xQueueSend(ir_trans_queue, &IR_cmd, portMAX_DELAY);
     ESP_LOGI(TAG, "Set name for IR learn command: %s", ir_key_args.key->sval[0]);
     return 0;
@@ -120,7 +123,6 @@ static int ir_reset_spiffs_cmd(int argc, char **argv)
     return 0;
 }
 
-
 static int ir_rename_key_cmd(int argc, char **argv)
 {
     int nerrors = arg_parse(argc, argv, (void **)&rename_args);
@@ -137,7 +139,6 @@ static int ir_rename_key_cmd(int argc, char **argv)
 
     return 0;
 }
-
 
 void register_ir_rename_commands(void)
 {
