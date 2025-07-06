@@ -17,6 +17,8 @@
 
 extern QueueHandle_t ir_learn_queue;
 extern QueueHandle_t ir_trans_queue;
+extern ir_learn_common_param_t *learn_param; // Pointer to the IR learn parameters
+extern device_state_t g_device_state; // Global device state
 
 static const char *TAG = "IR_CMD";
 
@@ -138,6 +140,34 @@ static int ir_rename_key_cmd(int argc, char **argv)
     rename_ir_key_in_spiffs(old_key, new_key);
 
     return 0;
+}
+static int ir_device_state_cmd(int argc, char **argv)
+{
+    load_device_state_from_nvs(&g_device_state);
+
+    ESP_LOGI(TAG, "Current device state loaded from NVS:");
+    ESP_LOGI(TAG, "AC power: %s, temp: %d, mode: %s, fan speed: %s",
+             toggle_power_to_str(g_device_state.ac.power_on), g_device_state.ac.temperature,
+             ir_mode_to_str(g_device_state.ac.mode), ir_fan_to_str(g_device_state.ac.speed));
+    ESP_LOGI(TAG, "Fan power: %s, speed: %s, oscillation: %d",
+        toggle_power_to_str(g_device_state.fan.power_on), ir_fan_to_str(g_device_state.fan.speed),
+             g_device_state.fan.oscillation);
+    ESP_LOGI(TAG, "Light power: %s",
+        toggle_power_to_str(g_device_state.light.power_on));
+
+    return 0;
+}
+void register_ir_device_state_commands(void)
+{
+    /* Register custom commands here */
+    esp_console_cmd_t device_state_cmd = {
+        .command = "device_state",
+        .help = "Get current device state from NVS",
+        .hint = NULL,
+        .func = &ir_device_state_cmd,
+        .argtable = NULL};
+
+    ESP_ERROR_CHECK(esp_console_cmd_register(&device_state_cmd));
 }
 
 void register_ir_rename_commands(void)

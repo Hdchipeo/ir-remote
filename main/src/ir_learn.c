@@ -189,6 +189,7 @@ void ir_rx_restart(ir_learn_common_param_t *learn_param)
         vTaskResume(ir_rx_task_handle);
         ESP_LOGI(TAG, "RX Task resumed");
     }
+    ir_learn_remove_all_symbol(learn_param->ctx);
 }
 esp_err_t ir_learn_restart(ir_learn_handle_t ir_learn_hdl)
 {
@@ -300,6 +301,15 @@ esp_err_t ir_learn_clean_data(struct ir_learn_list_head *learn_head)
 
     return ESP_OK;
 }
+void ir_learn_clone_sub_data(struct ir_learn_sub_list_head *dst, const struct ir_learn_sub_list_head *src)
+{
+    ir_learn_clean_sub_data(dst);
+    struct ir_learn_sub_list_t *cur;
+    SLIST_FOREACH(cur, src, next)
+    {
+        ir_learn_add_sub_list_node(dst, cur->timediff, &cur->symbols);
+    }
+}
 
 static bool ir_learn_process_rx_data(ir_learn_common_param_t *learn_param, rmt_rx_done_event_data_t *rx_data)
 {
@@ -339,15 +349,24 @@ static bool ir_learn_process_rx_data(ir_learn_common_param_t *learn_param, rmt_r
     ir_learn_add_sub_list_node(&last->cmd_sub_node, period, rx_data);
     ir_learn_list_unlock(learn_param->ctx);
 
-    if (learn_param->user_cb) {
+    if (learn_param->user_cb)
+    {
         learn_param->user_cb(learn_param->ctx->learned_count, learn_param->ctx->learned_sub, &last->cmd_sub_node);
     }
+
+    //ir_learn_clone_sub_data(&learn_param->ctx->learn_result, &last->cmd_sub_node);
 
     return true;
 }
 
 static esp_err_t ir_learn_active_receive_loop(ir_learn_common_param_t *learn_param)
 {
+    if (!learn_param || !learn_param->ctx)
+    {
+        ESP_LOGE(TAG, "Invalid parameter in learn loop");
+        return ESP_ERR_INVALID_ARG;
+    }
+
     rmt_rx_done_event_data_t learn_data;
 
     while (learn_param->ctx->learned_count < learn_param->ctx->learn_count)
@@ -358,20 +377,60 @@ static esp_err_t ir_learn_active_receive_loop(ir_learn_common_param_t *learn_par
             if (!success)
             {
                 ESP_LOGW(TAG, "Invalid RX data, waiting next...");
-                rmt_receive(rx_channel_handle, learn_param->ctx->rmt_rx.received_symbols, learn_param->ctx->rmt_rx.num_symbols, &ir_learn_rmt_rx_cfg);
+                if (rmt_receive(rx_channel_handle,
+                                learn_param->ctx->rmt_rx.received_symbols,
+                                learn_param->ctx->rmt_rx.num_symbols,
+                                &ir_learn_rmt_rx_cfg) != ESP_OK)
+                {
+                    ESP_LOGE(TAG, "Failed to restart RMT receive");
+                    return ESP_FAIL;
+                }
                 continue;
             }
 
-            rmt_receive(rx_channel_handle, learn_param->ctx->rmt_rx.received_symbols, learn_param->ctx->rmt_rx.num_symbols, &ir_learn_rmt_rx_cfg);
+            if (rmt_receive(rx_channel_handle,
+                            learn_param->ctx->rmt_rx.received_symbols,
+                            learn_param->ctx->rmt_rx.num_symbols,
+                            &ir_learn_rmt_rx_cfg) != ESP_OK)
+            {
+                ESP_LOGE(TAG, "Failed to restart RMT receive");
+                return ESP_FAIL;
+            }
         }
         else
         {
             if (learn_param->ctx->learned_sub > 0)
+            {
+                ESP_LOGI(TAG, "Timeout reached. Received partial IR. Proceeding.");
                 break;
+            }
+            else
+            {
+                ESP_LOGW(TAG, "Timeout reached with no IR signal. Retrying...");
+            }
         }
     }
 
     return ir_learn_check_valid(&learn_param->ctx->learn_list, &learn_param->ctx->learn_result);
+}
+
+static esp_err_t ir_clone_data(struct ir_learn_sub_list_head *dst, const struct ir_learn_sub_list_head *src)
+{
+    struct ir_learn_sub_list_t *node;
+
+    SLIST_FOREACH(node, src, next)
+    {
+        struct ir_learn_sub_list_t *new_node = malloc(sizeof(*new_node));
+        if (!new_node)
+            return ESP_ERR_NO_MEM;
+
+        memcpy(&new_node->symbols, &node->symbols, sizeof(node->symbols));
+        new_node->timediff = node->timediff;
+
+        SLIST_INSERT_HEAD(dst, new_node, next); // hoặc SLIST_INSERT_TAIL nếu muốn giữ thứ tự
+    }
+
+    return ESP_OK;
 }
 
 static void ir_learn_task(void *arg)
@@ -386,7 +445,8 @@ static void ir_learn_task(void *arg)
     rmt_rx_done_event_data_t passive_data;
     ir_event_cmd_t ir_event;
 
-    ir_learn_start(learn_param->ctx);
+    //ir_rx_restart(learn_param);
+
     learn_param->ctx->running = false;
 
     while (1)
@@ -405,6 +465,10 @@ static void ir_learn_task(void *arg)
                 learn_param->ctx->learned_count = 0;
                 learn_param->ctx->learned_sub = 0;
                 learn_param->ctx->pre_time = 0;
+
+                //ir_rx_restart(learn_param);
+
+                ir_learn_start(learn_param->ctx);
 
                 ESP_ERROR_CHECK(rmt_receive(rx_channel_handle,
                                             learn_param->ctx->rmt_rx.received_symbols,
@@ -433,25 +497,32 @@ static void ir_learn_task(void *arg)
                     }
                 }
                 learn_param->ctx->running = false;
+                ir_learn_remove_all_symbol(learn_param->ctx);
+                ir_learn_pause(learn_param->ctx);
+                //ir_rx_stop();
+                // vTaskDelay(pdMS_TO_TICKS(1000));
+                // ir_rx_restart(learn_param);
+                // continue;
             }
         }
-        else if (!learn_param->ctx->running)
-        {
-            if (xQueueReceive(learn_param->ctx->receive_queue, &passive_data, pdMS_TO_TICKS(10)) == pdTRUE)
-            {
-                ESP_LOGI(TAG, "Passive RX: received %d symbols", passive_data.num_symbols);
-                ir_learn_process_rx_data(learn_param, &passive_data);
-                ir_event.event = IR_EVENT_RECEIVE;
-                ir_event.data = &learn_param->ctx->learn_result;
-                xQueueSend(ir_trans_queue, &ir_event, portMAX_DELAY);
-                ESP_LOGI(TAG, "Passive RX processed, waiting for next data...");
-                rmt_receive(rx_channel_handle, learn_param->ctx->rmt_rx.received_symbols, learn_param->ctx->rmt_rx.num_symbols, &ir_learn_rmt_rx_cfg);
-            }
-            else if (learn_param->ctx->learned_sub > 0)
-            {
-                break;
-            }
-        }
+
+        // if (!learn_param->ctx->running)
+        // {
+        //     if (xQueueReceive(learn_param->ctx->receive_queue, &passive_data, pdMS_TO_TICKS(10)) == pdTRUE)
+        //     {
+        //         ESP_LOGI(TAG, "Added IR block with %d symbols", passive_data.num_symbols);
+        //         ir_learn_process_rx_data(learn_param, &passive_data);
+
+        //         ir_event.event = IR_EVENT_RECEIVE;
+        //         ir_event.data = &learn_param->ctx->learn_result;
+        //         xQueueSend(ir_trans_queue, &ir_event, portMAX_DELAY);
+        //         ESP_LOGI(TAG, "Learn result: %s", SLIST_EMPTY(&learn_param->ctx->learn_result) ? "EMPTY" : "HAS DATA");
+        //         ESP_LOGI(TAG, "Passive RX processed, waiting for next data...");
+        //         ir_learn_remove_all_symbol(learn_param->ctx);
+        //         vTaskDelay(pdMS_TO_TICKS(1000));
+        //         rmt_receive(rx_channel_handle, learn_param->ctx->rmt_rx.received_symbols, learn_param->ctx->rmt_rx.num_symbols, &ir_learn_rmt_rx_cfg);
+        //     }
+        // }
     }
     vTaskDelete(NULL);
 }

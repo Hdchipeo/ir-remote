@@ -9,7 +9,12 @@
 
 static const char *TAG = "device";
 
-static const char *ir_mode_to_str(ac_mode_t mode)
+const char *toggle_power_to_str(bool power_on)
+{
+    return power_on ? "on" : "off";
+}
+
+const char *ir_mode_to_str(ac_mode_t mode)
 {
     switch (mode)
     {
@@ -23,6 +28,22 @@ static const char *ir_mode_to_str(ac_mode_t mode)
         return "dry";
     case AC_MODE_AUTO:
         return "auto";
+    default:
+        return "unknown";
+    }
+}
+const char *ir_fan_to_str(fan_speed_t speed)
+{
+    switch (speed)
+    {
+    case LOW:
+        return "low";
+    case MEDIUM:
+        return "medium";
+    case HIGH:
+        return "high";
+    case MAX:
+        return "max";
     default:
         return "unknown";
     }
@@ -73,12 +94,12 @@ void ir_state_init(device_state_t *state)
     // state->ac.light.brightness = 100; // Default brightness
     // state->ac.light.color_temperature = 3000; // Default color temperature in Kelvin
     // Initialize other device states as needed
-    ESP_LOGI(TAG, "Device state initialized: AC power: %d, temp: %d, mode: %s, fan speed: %d",
-             state->ac.power_on, state->ac.temperature, ir_mode_to_str(state->ac.mode), state->ac.speed);
-    ESP_LOGI(TAG, "Fan state initialized: power: %d, speed: %d, oscillation: %d",
-             state->fan.power_on, state->fan.speed, state->fan.oscillation);
-    ESP_LOGI(TAG, "Light state initialized: power: %d",
-             state->light.power_on);
+    ESP_LOGI(TAG, "Device state initialized: AC power: %s, temp: %d, mode: %s, fan speed: %s",
+             toggle_power_to_str(state->ac.power_on), state->ac.temperature, ir_mode_to_str(state->ac.mode), ir_fan_to_str(state->ac.speed));
+    ESP_LOGI(TAG, "Fan state initialized: power: %s, speed: %s, oscillation: %d",
+             toggle_power_to_str(state->fan.power_on), ir_fan_to_str(state->fan.speed), state->fan.oscillation);
+    ESP_LOGI(TAG, "Light state initialized: power: %s",
+             toggle_power_to_str(state->light.power_on));
 }
 
 void ir_state_handle_command(device_state_t *state, ir_command_packet_t packet)
@@ -172,23 +193,40 @@ void ir_state_get_key(device_state_t *state, char *out_key, size_t max_len)
 }
 static void ir_state_set_from_key(device_state_t *state, const char *key)
 {
-    if (strstr(key, "ac_")) {
-        state->type = DEVICE_TYPE_AC;
-        sscanf(key, "ac_%3s_%d_%4s_%d", 
-               state->ac.power_str,        // "on"/"off"
-               &state->ac.temperature,
-               state->ac.mode_str,         // "cool"/"auto"/...
-               &state->ac.fan_speed);
+    if (!state || !key)
+        return;
 
-        state->ac.power_on = strcmp(state->ac.power_str, "on") == 0;
-        state->ac.mode = ir_mode_from_str(state->ac.mode_str);
-        state->ac.speed = ir_fan_from_int(state->ac.fan_speed);
+    if (strncmp(key, "ac_", 3) == 0)
+    {
+        char power_str[4] = {0}; // "on"/"off"
+        char mode_str[8] = {0};  // "cool"/"auto"
+        int temp = 0;
+        int fan_speed = 0;
+
+        int parsed = sscanf(key, "ac_%3[^_]_%d_%7[^_]_%d",
+                            power_str, &temp, mode_str, &fan_speed);
+        if (parsed != 4)
+        {
+            ESP_LOGW(TAG, "Invalid key format: %s", key);
+            return;
+        }
+
+        state->type = DEVICE_TYPE_AC;
+        state->ac.power_on = strcmp(power_str, "on") == 0;
+        state->ac.temperature = temp;
+        state->ac.mode = ir_mode_from_str(mode_str);
+        state->ac.speed = ir_fan_from_int(fan_speed);
+
+        ESP_LOGI(TAG, "Parsed AC state -> power: %s, temp: %d, mode: %s, fan: %d",
+                 power_str, temp, mode_str, fan_speed);
     }
-    else if (strcmp(key, "fan_on") == 0) {
+    else if (strcmp(key, "fan_on") == 0)
+    {
         state->type = DEVICE_TYPE_FAN;
         state->fan.power_on = true;
     }
-    else if (strcmp(key, "light_off") == 0) {
+    else if (strcmp(key, "light_off") == 0)
+    {
         state->type = DEVICE_TYPE_LIGHT;
         state->light.power_on = false;
     }
@@ -201,8 +239,6 @@ void update_device_state_from_key(device_state_t *state, const char *key)
     ir_state_set_from_key(state, key);
     save_device_state_to_nvs(state);
     ESP_LOGI(TAG, "Updated device state from key: %s", key);
-    ESP_LOGI(TAG, "Current state: AC power: %d, temp: %d, mode: %s, fan speed: %d",
-             state->ac.power_on, state->ac.temperature, ir_mode_to_str(state->ac.mode), state->ac.speed);
-    
+    ESP_LOGI(TAG, "Current state: AC power: %s, temp: %d, mode: %s, fan speed: %s",
+             toggle_power_to_str(state->ac.power_on), state->ac.temperature, ir_mode_to_str(state->ac.mode), ir_fan_to_str(state->ac.speed));
 }
-

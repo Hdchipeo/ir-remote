@@ -35,6 +35,7 @@ extern "C"
         ac_mode_t mode;
 
         char power_str[4]; // "on"/"off"
+        uint8_t temperature_; // 20 - 30 degrees Celsius
         char mode_str[8];  // "auto"/"cool"/...
         int fan_speed;
 
@@ -125,6 +126,11 @@ extern "C"
      * @param key The IR key to parse and update the state
      */
     void update_device_state_from_key(device_state_t *state, const char *key);
+
+    
+    const char *ir_fan_to_str(fan_speed_t speed);
+    const char* toggle_power_to_str(bool power_on);
+    const char *ir_mode_to_str(ac_mode_t mode);
 
 #ifdef __cplusplus
 }

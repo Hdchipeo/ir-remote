@@ -47,6 +47,11 @@ void register_ir_input_name_commands(void);
  */
 void register_ir_rename_commands(void);
 
+/**
+ * @brief Register commands to manage IR device states.
+ */
+void register_ir_device_state_commands(void);
+
 #ifdef __cplusplus
 }
 #endif

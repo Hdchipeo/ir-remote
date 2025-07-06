@@ -52,6 +52,17 @@ static bool compare_ir_symbols(const rmt_symbol_word_t *a, size_t a_num,
     return true;
 }
 
+static int count_sub_nodes(const struct ir_learn_sub_list_head *head)
+{
+    int count = 0;
+    struct ir_learn_sub_list_t *item;
+    SLIST_FOREACH(item, head, next)
+    {
+        count++;
+    }
+    return count;
+}
+
 bool match_ir_from_spiffs(const struct ir_learn_sub_list_head *data_learn, char *matched_key_out)
 {
     DIR *dir = opendir("/spiffs");
@@ -67,13 +78,19 @@ bool match_ir_from_spiffs(const struct ir_learn_sub_list_head *data_learn, char 
         if (strstr(entry->d_name, ".ir"))
         {
             char key[32];
-            strncpy(key, entry->d_name, sizeof(key));
-            key[strcspn(key, ".")] = '\0';
+            snprintf(key, sizeof(key), "%.*s", strcspn(entry->d_name, "."), entry->d_name);
 
             struct ir_learn_sub_list_head temp_list;
             SLIST_INIT(&temp_list);
 
+            ESP_LOGI("MATCH", "Free: %d, Largest block: %d",
+                     esp_get_free_heap_size(),
+                     heap_caps_get_largest_free_block(MALLOC_CAP_8BIT));
+
             ir_learn_load(&temp_list, key);
+            ESP_LOGI("MATCH", "Free: %d, Largest block: %d",
+                     esp_get_free_heap_size(),
+                     heap_caps_get_largest_free_block(MALLOC_CAP_8BIT));
             if (SLIST_EMPTY(&temp_list))
             {
                 ir_learn_clean_sub_data(&temp_list);

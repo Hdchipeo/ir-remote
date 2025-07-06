@@ -24,7 +24,7 @@ void ir_learn_save(struct ir_learn_sub_list_head *data_save, struct ir_learn_sub
  * @param data_load Pointer to the list to load data into
  * @param key File name to load (without ".ir" extension)
  */
-void ir_learn_load(struct ir_learn_sub_list_head *data_load, const char *key);
+esp_err_t ir_learn_load(struct ir_learn_sub_list_head *data_load, const char *key);
 
 /**
  * @brief List all IR keys stored in SPIFFS.

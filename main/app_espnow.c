@@ -146,7 +146,6 @@ static void espnow_task(void *pvParameter)
     if (load_device_state_from_nvs(&g_device_state) != ESP_OK)
     {
         ESP_LOGE(TAG, "Failed to load device state from NVS");
-        return;
     }
 
     while (xQueueReceive(s_espnow_queue, &evt, portMAX_DELAY) == pdTRUE)
@@ -173,6 +172,8 @@ static void espnow_task(void *pvParameter)
             break;
         }
     }
+
+    vTaskDelete(NULL);
 }
 static esp_err_t espnow_init(void)
 {
@@ -196,7 +197,7 @@ static esp_err_t espnow_init(void)
     /* Add broadcast peer information to peer list. */
     espnow_add_peer(broadcast_mac, false);
 
-    xTaskCreate(espnow_task, "esp_now_task", 2048, NULL, 4, NULL);
+    xTaskCreate(espnow_task, "esp_now_task", 4096, NULL, 4, NULL);
 
     return ESP_OK;
 }

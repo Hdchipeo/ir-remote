@@ -22,7 +22,7 @@ extern "C" {
 
 
 // Maximum number of IR symbols that can be learned in a single command.
-#define IR_TOLERANCE_US 100 // Tolerance in microseconds for IR signal duration matching
+#define IR_TOLERANCE_US 350 // Tolerance in microseconds for IR signal duration matching
 
 /**
  * @brief IR signal resolution in Hz.

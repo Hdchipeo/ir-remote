@@ -36,6 +36,7 @@ void app_console_start()
     register_ir_format_spiffs_commands();
     register_ir_input_name_commands();
     register_ir_rename_commands();
+    register_ir_device_state_commands();
     ESP_LOGI(TAG, "Registering IR commands");
 
 #if defined(CONFIG_ESP_CONSOLE_UART_DEFAULT) || defined(CONFIG_ESP_CONSOLE_UART_CUSTOM)

@@ -73,9 +73,15 @@ static esp_err_t load_ir_list_from_file(const char *key, struct ir_learn_sub_lis
 
         size_t read_count = fread(&timediff, sizeof(uint32_t), 1, f);
         if (read_count != 1)
-            break; // EOF
+            break; // End of file or read error
+        
 
-        fread(&num_symbols, sizeof(uint32_t), 1, f);
+        read_count = fread(&num_symbols, sizeof(uint32_t), 1, f);
+        if (read_count != 1)
+        {
+            ESP_LOGW("IR", "Failed to read num_symbols");
+            break;
+        }
 
         size_t symbol_size = num_symbols * sizeof(rmt_symbol_word_t);
         rmt_symbol_word_t *symbols = malloc(symbol_size);
@@ -86,7 +92,14 @@ static esp_err_t load_ir_list_from_file(const char *key, struct ir_learn_sub_lis
             return ESP_ERR_NO_MEM;
         }
 
-        fread(symbols, sizeof(rmt_symbol_word_t), num_symbols, f);
+        read_count = fread(symbols, sizeof(rmt_symbol_word_t), num_symbols, f);
+        if (read_count != num_symbols)
+        {
+            ESP_LOGW("IR", "Failed to read %d symbols (got %d)", num_symbols, read_count);
+            free(symbols);
+            fclose(f);
+            break;
+        }
 
         rmt_rx_done_event_data_t symbol_data = {
             .received_symbols = symbols,
@@ -94,6 +107,8 @@ static esp_err_t load_ir_list_from_file(const char *key, struct ir_learn_sub_lis
         };
 
         ir_learn_add_sub_list_node(out_list, timediff, &symbol_data);
+        ESP_LOGI("IR", "Loaded block: timediff=%d, num_symbols=%d", timediff, num_symbols);
+        
     }
 
     fclose(f);
@@ -112,14 +127,14 @@ void ir_learn_save(struct ir_learn_sub_list_head *data_save, struct ir_learn_sub
 
     save_ir_list_to_file(key, data_save);
 }
-void ir_learn_load(struct ir_learn_sub_list_head *data_load, const char *key)
+esp_err_t ir_learn_load(struct ir_learn_sub_list_head *data_load, const char *key)
 {
     esp_err_t ret = load_ir_list_from_file(key, data_load);
     if (ret != ESP_OK)
     {
         ESP_LOGE(TAG, "Failed to load IR symbols from file, ret: %s", esp_err_to_name(ret));
-        return;
     }
+    return ret;
 }
 void list_ir_keys_from_spiffs(void)
 {
@@ -290,7 +305,7 @@ esp_err_t load_device_state_from_nvs(device_state_t *state)
         return ESP_ERR_INVALID_ARG;
 
     nvs_handle_t nvs_handle;
-    esp_err_t err = nvs_open(NVS_IR_NAMESPACE, NVS_READONLY, &nvs_handle);
+    esp_err_t err = nvs_open(NVS_IR_NAMESPACE, NVS_READWRITE, &nvs_handle);
     if (err != ESP_OK)
     {
         ESP_LOGE(TAG, "Failed to open NVS (%s)", esp_err_to_name(err));
@@ -301,17 +316,12 @@ esp_err_t load_device_state_from_nvs(device_state_t *state)
     err = nvs_get_blob(nvs_handle, "device_state", state, &required_size);
     if (err == ESP_ERR_NVS_NOT_FOUND)
     {
-        ESP_LOGW(TAG, "Device state not found in NVS");
-        nvs_close(nvs_handle);
-        return ESP_ERR_NOT_FOUND;
-    }
-    else if (err != ESP_OK)
-    {
-        ESP_LOGE(TAG, "Failed to read device state from NVS (%s)", esp_err_to_name(err));
-        nvs_close(nvs_handle);
-        return err;
+        ESP_LOGW(TAG, "Device state not found, setting defaults.");
+        err = nvs_set_blob(nvs_handle, "device_state", state, sizeof(device_state_t));
+        if (err == ESP_OK)
+            err = nvs_commit(nvs_handle); // nhớ commit!
     }
 
     nvs_close(nvs_handle);
-    return ESP_OK;
+    return err;
 }
