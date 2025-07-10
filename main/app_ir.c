@@ -36,7 +36,7 @@ QueueHandle_t ir_trans_queue = NULL;
 QueueHandle_t ir_learn_queue = NULL;
 
 extern ir_learn_common_param_t *learn_param; // Pointer to the IR learn parameters
-extern device_state_t g_device_state; // Global device state
+extern device_state_t g_device_state;        // Global device state
 
 extern bool light_flag; // Flag to control light state
 
@@ -61,6 +61,10 @@ static void ir_send_cb(ir_learn_state_t state, uint8_t sub_step, struct ir_learn
         light_flag = false;
         break;
     case IR_LEARN_STATE_STEP:
+        break;
+    case IR_LEARN_STATE_RECEIVE:
+        ESP_LOGI(TAG, "IR Learn receive step: %d", sub_step);
+        break;
     default:
         ESP_LOGI(TAG, "IR Learn step:[%d][%d]", state, sub_step);
         break;
@@ -83,13 +87,13 @@ static void ir_learn_tx_task(void *arg)
             switch (ir_event.event)
             {
             case IR_EVENT_TRANSMIT:
-                //ir_rx_stop(); // Stop IR RX before transmitting
+                ir_rx_stop(); // Stop IR RX before transmitting
                 ESP_LOGI(TAG, "IR transmit command for key: %s", ir_event.key);
                 ir_learn_load(&ir_data, ir_event.key);
                 ir_send_raw(&ir_data);
                 update_device_state_from_key(&g_device_state, ir_event.key);
                 ir_learn_clean_sub_data(&ir_data);
-                //ir_rx_restart(learn_param);
+                ir_rx_restart(learn_param);
                 break;
             case IR_EVENT_LEARN_DONE:
                 ir_learn_save(&ir_data, ir_event.data, ir_event.key);
@@ -107,19 +111,6 @@ static void ir_learn_tx_task(void *arg)
                 rename_ir_key_in_spiffs("unknow", ir_event.key);
                 break;
             case IR_EVENT_RECEIVE:
-                ESP_LOGI(TAG, "IR receive event");
-                // struct ir_learn_sub_list_head *received_data = (struct ir_learn_sub_list_head *)ir_event.data;
-                // char matched_key[32] = {0};
-                // if(match_ir_from_spiffs(&received_data, matched_key))
-                // {
-                //     ESP_LOGI(TAG, "Matched IR key: %s", matched_key);
-                //     update_device_state_from_key(&g_device_state, matched_key);
-                // }
-                // else
-                // {
-                //     ESP_LOGW(TAG, "No matching IR key found");
-                // }
-                // ir_learn_clean_sub_data(received_data);
                 break;
             default:
                 ESP_LOGW(TAG, "Unknown IR event: %d", ir_event.event);

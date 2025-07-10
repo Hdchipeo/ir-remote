@@ -1,0 +1,19 @@
+{
+    "configurations": [
+        {
+            "name": "ESP32",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/Users/dangminhtam/esp/esp-idf/components/**"
+            ],
+            "defines": [
+                "ESP_PLATFORM"
+            ],
+            "compilerPath": "/Users/dangminhtam/esp/esp-idf/tools/tools/xtensa-esp-elf/esp-13.2.0_20240530/xtensa-esp-elf/bin/xtensa-esp32-elf-gcc",
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "gcc-x64"
+        }
+    ],
+    "version": 4
+}

@@ -40,7 +40,8 @@ extern "C"
         IR_LEARN_STATE_READY = 20, /**< IR learn ready, after successful initialization */
         IR_LEARN_STATE_END,        /**< IR learn successfully */
         IR_LEARN_STATE_FAIL,       /**< IR learn failure */
-        IR_LEARN_STATE_EXIT,       /**< IR learn exit */
+        IR_LEARN_STATE_EXIT,
+        IR_LEARN_STATE_RECEIVE       /**< IR learn exit */
     } ir_learn_state_t;
 
     typedef enum
@@ -283,6 +284,14 @@ extern "C"
      *          - ESP_ERR_INVALID_ARG     Invalid device handle or argument.
      */
     void ir_rx_restart(ir_learn_common_param_t *learn_param);
+    /**
+     * @brief Pause IR RX.
+     * @note This function is used to pause IR RX when transmitting IR signals.
+     * @param
+     *          - ESP_OK                  Pause process success.
+     *          - ESP_ERR_INVALID_ARG     Invalid device handle or argument.
+     */
+    void ir_rx_pause();
 
 #ifdef __cplusplus
 }

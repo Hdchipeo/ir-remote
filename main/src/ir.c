@@ -82,15 +82,8 @@ bool match_ir_from_spiffs(const struct ir_learn_sub_list_head *data_learn, char 
 
             struct ir_learn_sub_list_head temp_list;
             SLIST_INIT(&temp_list);
-
-            ESP_LOGI("MATCH", "Free: %d, Largest block: %d",
-                     esp_get_free_heap_size(),
-                     heap_caps_get_largest_free_block(MALLOC_CAP_8BIT));
-
             ir_learn_load(&temp_list, key);
-            ESP_LOGI("MATCH", "Free: %d, Largest block: %d",
-                     esp_get_free_heap_size(),
-                     heap_caps_get_largest_free_block(MALLOC_CAP_8BIT));
+            ESP_LOGI("IR_MATCH", "Checking key: %s", key);
             if (SLIST_EMPTY(&temp_list))
             {
                 ir_learn_clean_sub_data(&temp_list);
@@ -108,6 +101,7 @@ bool match_ir_from_spiffs(const struct ir_learn_sub_list_head *data_learn, char 
                 if (!compare_ir_symbols(sub_a->symbols.received_symbols, sub_a->symbols.num_symbols,
                                         sub_b->symbols.received_symbols, sub_b->symbols.num_symbols))
                 {
+                    ESP_LOGI("IR_MATCH", "Mismatch in key: %s", key);
                     all_matched = false;
                     break;
                 }

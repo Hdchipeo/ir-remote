@@ -107,7 +107,6 @@ static esp_err_t load_ir_list_from_file(const char *key, struct ir_learn_sub_lis
         };
 
         ir_learn_add_sub_list_node(out_list, timediff, &symbol_data);
-        ESP_LOGI("IR", "Loaded block: timediff=%d, num_symbols=%d", timediff, num_symbols);
         
     }
 

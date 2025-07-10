@@ -19,6 +19,7 @@ extern QueueHandle_t ir_learn_queue;
 extern QueueHandle_t ir_trans_queue;
 extern ir_learn_common_param_t *learn_param; // Pointer to the IR learn parameters
 extern device_state_t g_device_state; // Global device state
+extern bool light_flag;
 
 static const char *TAG = "IR_CMD";
 
@@ -108,11 +109,11 @@ static int ir_delete_key_cmd(int argc, char **argv)
     esp_err_t err = delete_ir_key_from_spiffs(ir_key_args.key->sval[0]);
     if (err == ESP_OK)
     {
-        ESP_LOGI(TAG, "IR key '%s' deleted successfully from NVS.", ir_key_args.key->sval[0]);
+        ESP_LOGI(TAG, "IR key '%s' deleted successfully from spiffs.", ir_key_args.key->sval[0]);
     }
     else
     {
-        ESP_LOGE(TAG, "Failed to delete IR key '%s' from NVS: %s", ir_key_args.key->sval[0], esp_err_to_name(err));
+        ESP_LOGE(TAG, "Failed to delete IR key '%s' from spiffs: %s", ir_key_args.key->sval[0], esp_err_to_name(err));
     }
 
     return 0;

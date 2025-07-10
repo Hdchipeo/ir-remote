@@ -221,10 +221,10 @@ static esp_err_t ir_learn_pause(ir_learn_t *ctx)
 {
     IR_LEARN_CHECK(ctx, "learn task not executed!", ESP_ERR_INVALID_ARG);
 
-    if (ctx->running)
-    {
-        ctx->running = false;
-    }
+    // if (ctx->running)
+    // {
+    //     ctx->running = false;
+    // }
     if (rx_channel_handle)
     {
         rmt_disable(rx_channel_handle);
@@ -241,17 +241,17 @@ static esp_err_t ir_learn_start(ir_learn_t *ctx)
 {
     IR_LEARN_CHECK(ctx, "learn task not executed!", ESP_ERR_INVALID_ARG);
 
-    if (!ctx->running)
-    {
-        ctx->running = true;
-        init_rmt_rx(ctx);
-        rmt_enable(rx_channel_handle);
-        ir_learn_remove_all_symbol(ctx);
-    }
-    else
-    {
-        ESP_LOGI(TAG, "already running");
-    }
+    // if (!ctx->running)
+    // {
+    // ctx->running = true;
+    init_rmt_rx(ctx);
+    rmt_enable(rx_channel_handle);
+    ir_learn_remove_all_symbol(ctx);
+    // }
+    // else
+    // {
+    //     ESP_LOGI(TAG, "already running");
+    // }
 
     return ESP_OK;
 }
@@ -354,9 +354,17 @@ static bool ir_learn_process_rx_data(ir_learn_common_param_t *learn_param, rmt_r
         learn_param->user_cb(learn_param->ctx->learned_count, learn_param->ctx->learned_sub, &last->cmd_sub_node);
     }
 
-    //ir_learn_clone_sub_data(&learn_param->ctx->learn_result, &last->cmd_sub_node);
+    // ir_learn_clone_sub_data(&learn_param->ctx->learn_result, &last->cmd_sub_node);
 
     return true;
+}
+
+void ir_rx_pause()
+{
+    if (ir_rx_task_handle)
+    {
+        xTaskNotify(ir_rx_task_handle, 1, eSetValueWithOverwrite);
+    }
 }
 
 static esp_err_t ir_learn_active_receive_loop(ir_learn_common_param_t *learn_param)
@@ -367,11 +375,14 @@ static esp_err_t ir_learn_active_receive_loop(ir_learn_common_param_t *learn_par
         return ESP_ERR_INVALID_ARG;
     }
 
+    learn_param->ctx->learned_count = 0;
+    learn_param->ctx->learned_sub = 0;
+
     rmt_rx_done_event_data_t learn_data;
 
     while (learn_param->ctx->learned_count < learn_param->ctx->learn_count)
     {
-        if (xQueueReceive(learn_param->ctx->receive_queue, &learn_data, pdMS_TO_TICKS(3000)) == pdTRUE)
+        if (xQueueReceive(learn_param->ctx->receive_queue, &learn_data, pdMS_TO_TICKS(10000)) == pdTRUE)
         {
             bool success = ir_learn_process_rx_data(learn_param, &learn_data);
             if (!success)
@@ -407,6 +418,7 @@ static esp_err_t ir_learn_active_receive_loop(ir_learn_common_param_t *learn_par
             else
             {
                 ESP_LOGW(TAG, "Timeout reached with no IR signal. Retrying...");
+                break;
             }
         }
     }
@@ -432,6 +444,18 @@ static esp_err_t ir_clone_data(struct ir_learn_sub_list_head *dst, const struct 
 
     return ESP_OK;
 }
+esp_err_t send_data_to_ir_app(ir_learn_common_param_t *learn_param, ir_event_cmd_t *ir_event)
+{
+    IR_LEARN_CHECK(learn_param && ir_event, "Invalid parameters", ESP_ERR_INVALID_ARG);
+
+    if (xQueueSend(ir_trans_queue, ir_event, portMAX_DELAY) != pdTRUE)
+    {
+        ESP_LOGE(TAG, "Failed to send IR event to queue");
+        return ESP_FAIL;
+    }
+
+    return ESP_OK;
+}
 
 static void ir_learn_task(void *arg)
 {
@@ -442,16 +466,13 @@ static void ir_learn_task(void *arg)
         return;
     }
     learn_param = (ir_learn_common_param_t *)arg;
-    rmt_rx_done_event_data_t passive_data;
     ir_event_cmd_t ir_event;
 
-    //ir_rx_restart(learn_param);
-
-    learn_param->ctx->running = false;
+    ir_learn_restart(learn_param->ctx);
 
     while (1)
     {
-        if (xQueueReceive(ir_learn_queue, &ir_event, pdMS_TO_TICKS(10)) == pdTRUE)
+        if (xQueueReceive(ir_learn_queue, &ir_event, portMAX_DELAY) == pdTRUE)
         {
             if (ir_event.event == IR_EVENT_LEARN)
             {
@@ -461,13 +482,6 @@ static void ir_learn_task(void *arg)
                 {
                     learn_param->user_cb(IR_LEARN_STATE_READY, 0, NULL);
                 }
-
-                learn_param->ctx->learned_count = 0;
-                learn_param->ctx->learned_sub = 0;
-                learn_param->ctx->pre_time = 0;
-
-                //ir_rx_restart(learn_param);
-
                 ir_learn_start(learn_param->ctx);
 
                 ESP_ERROR_CHECK(rmt_receive(rx_channel_handle,
@@ -486,7 +500,7 @@ static void ir_learn_task(void *arg)
                     }
                     ir_event.event = IR_EVENT_LEARN_DONE;
                     ir_event.data = &learn_param->ctx->learn_result;
-                    xQueueSend(ir_trans_queue, &ir_event, portMAX_DELAY);
+                    send_data_to_ir_app(learn_param, &ir_event);
                 }
                 else
                 {
@@ -496,34 +510,11 @@ static void ir_learn_task(void *arg)
                         learn_param->user_cb(IR_LEARN_STATE_FAIL, 0, NULL);
                     }
                 }
-                learn_param->ctx->running = false;
-                ir_learn_remove_all_symbol(learn_param->ctx);
                 ir_learn_pause(learn_param->ctx);
-                //ir_rx_stop();
-                // vTaskDelay(pdMS_TO_TICKS(1000));
-                // ir_rx_restart(learn_param);
-                // continue;
             }
         }
-
-        // if (!learn_param->ctx->running)
-        // {
-        //     if (xQueueReceive(learn_param->ctx->receive_queue, &passive_data, pdMS_TO_TICKS(10)) == pdTRUE)
-        //     {
-        //         ESP_LOGI(TAG, "Added IR block with %d symbols", passive_data.num_symbols);
-        //         ir_learn_process_rx_data(learn_param, &passive_data);
-
-        //         ir_event.event = IR_EVENT_RECEIVE;
-        //         ir_event.data = &learn_param->ctx->learn_result;
-        //         xQueueSend(ir_trans_queue, &ir_event, portMAX_DELAY);
-        //         ESP_LOGI(TAG, "Learn result: %s", SLIST_EMPTY(&learn_param->ctx->learn_result) ? "EMPTY" : "HAS DATA");
-        //         ESP_LOGI(TAG, "Passive RX processed, waiting for next data...");
-        //         ir_learn_remove_all_symbol(learn_param->ctx);
-        //         vTaskDelay(pdMS_TO_TICKS(1000));
-        //         rmt_receive(rx_channel_handle, learn_param->ctx->rmt_rx.received_symbols, learn_param->ctx->rmt_rx.num_symbols, &ir_learn_rmt_rx_cfg);
-        //     }
-        // }
     }
+
     vTaskDelete(NULL);
 }
 

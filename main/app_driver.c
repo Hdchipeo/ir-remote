@@ -19,6 +19,7 @@ static const char *TAG = "Device";
 extern QueueHandle_t ir_trans_queue; // Queue to handle IR transmit events
 extern QueueHandle_t ir_learn_queue; // Queue to handle IR learn events
 
+extern ir_learn_common_param_t *learn_param;
 bool light_flag = false; // Flag to control light state
 
 static void button_event_cb(void *arg, void *data)
