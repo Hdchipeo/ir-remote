@@ -35,7 +35,7 @@ extern "C" {
 /**
  * @brief GPIO number used for IR transmission.
  */
-#define IR_TX_GPIO_NUM CONFIG_IR_TX_GPIO
+#define IR_TX_GPIO_NUM CONFIG_IR_TX_GPIO 
 
 /**
  * @brief GPIO number used for IR reception.
@@ -45,7 +45,7 @@ extern "C" {
 /**
  * @brief Number of times to learn the IR signal before saving.
  */
-#define IR_LEARN_COUNT 1
+#define IR_LEARN_COUNT 4
 
 /**
  * @brief Starts the IR learning task and initializes NVS and RMT peripherals.

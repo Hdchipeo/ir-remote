@@ -1,0 +1,488 @@
+��}������ Mets Jul 29 2019 12:21:46
+
+rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:5940
+load:0x40078000,len:15216
+ho 0 tail 12 room 4
+load:0x40080400,len:4
+load:0x40080404,len:3492
+entry 0x400805d0
+[0;32mI (601) cpu_start: Multicore app[0m
+[0;32mI (610) cpu_start: Pro cpu start user code[0m
+[0;32mI (610) cpu_start: cpu freq: 240000000 Hz[0m
+[0;32mI (610) app_init: Application information:[0m
+[0;32mI (613) app_init: Project name:     ir-learn[0m
+[0;32mI (618) app_init: App version:      1.0[0m
+[0;32mI (622) app_init: Compile time:     Jul 12 2025 14:03:09[0m
+[0;32mI (628) app_init: ELF file SHA256:  9d62702c0...[0m
+[0;32mI (634) app_init: ESP-IDF:          v5.3.1-dirty[0m
+[0;32mI (639) efuse_init: Min chip rev:     v0.0[0m
+[0;32mI (644) efuse_init: Max chip rev:     v3.99 [0m
+[0;32mI (649) efuse_init: Chip rev:         v3.1[0m
+[0;32mI (654) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (661) heap_init: At 3FFAFF10 len 000000F0 (0 KiB): DRAM[0m
+[0;32mI (667) heap_init: At 3FFB6388 len 00001C78 (7 KiB): DRAM[0m
+[0;32mI (673) heap_init: At 3FFB9A20 len 00004108 (16 KiB): DRAM[0m
+[0;32mI (679) heap_init: At 3FFCBA80 len 00014580 (81 KiB): DRAM[0m
+[0;32mI (685) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (691) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (698) heap_init: At 4009DDB0 len 00002250 (8 KiB): IRAM[0m
+[0;32mI (706) spi_flash: detected chip: generic[0m
+[0;32mI (709) spi_flash: flash io: dio[0m
+[0;32mI (714) coexist: coex firmware version: 4482466[0m
+[0;32mI (719) main_task: Started on CPU0[0m
+[0;32mI (722) main_task: Calling app_main()[0m
+[0;32mI (760) wifi:wifi driver task: 3ffd0778, prio:23, stack:6656, core=0[0m
+[0;32mI (765) wifi:wifi firmware version: ccaebfa[0m
+[0;32mI (765) wifi:wifi certification version: v7.0[0m
+[0;32mI (765) wifi:config NVS flash: enabled[0m
+[0;32mI (767) wifi:config nano formating: disabled[0m
+[0;32mI (771) wifi:Init data frame dynamic rx buffer num: 32[0m
+[0;32mI (776) wifi:Init static rx mgmt buffer num: 5[0m
+[0;32mI (780) wifi:Init management short buffer num: 32[0m
+[0;32mI (784) wifi:Init dynamic tx buffer num: 32[0m
+[0;32mI (788) wifi:Init static rx buffer size: 1600[0m
+[0;32mI (792) wifi:Init static rx buffer num: 10[0m
+[0;32mI (796) wifi:Init dynamic rx buffer num: 32[0m
+[0;32mI (801) wifi_init: rx ba win: 6[0m
+[0;32mI (804) wifi_init: accept mbox: 6[0m
+[0;32mI (808) wifi_init: tcpip mbox: 32[0m
+[0;32mI (812) wifi_init: udp mbox: 6[0m
+[0;32mI (815) wifi_init: tcp mbox: 6[0m
+[0;32mI (819) wifi_init: tcp tx win: 5760[0m
+[0;32mI (823) wifi_init: tcp rx win: 5760[0m
+[0;32mI (828) wifi_init: tcp mss: 1440[0m
+[0;32mI (831) wifi_init: WiFi IRAM OP enabled[0m
+[0;32mI (836) wifi_init: WiFi RX IRAM OP enabled[0m
+[0;32mI (852) esp_rmaker_work_queue: Work Queue created.[0m
+[0;32mI (864) esp_mqtt_glue: AWS PPI: ?Platform=APN3|A0|RM|EX00|RMDev|1x0|E465B8117F9C[0m
+[0;32mI (864) esp_mqtt_glue: Initialising MQTT[0m
+[0;32mI (867) esp_rmaker_mqtt_budget: MQTT Budgeting initialised. Default: 100, Max: 1024, Revive count: 1, Revive period: 5[0m
+[0;32mI (877) ESP_OTA: RainMaker Initialised.[0m
+[0;32mI (882) esp_rmaker_node: Node ID ----- VH3NewQB4quKbHQFkjXRsg[0m
+[0;32mI (888) esp_rmaker_ota_using_topics: OTA enabled with Topics[0m
+[0;32mI (897) esp_rmaker_ota: OTA state = 2[0m
+[0;32mI (899) esp_rmaker_time: Initializing SNTP. Using the SNTP server: pool.ntp.org[0m
+[0;32mI (909) esp_rmaker_time_service: Time service enabled[0m
+[0;32mI (912) esp_rmaker_core: Starting RainMaker Work Queue task[0m
+[0;32mI (919) esp_rmaker_work_queue: RainMaker Work Queue task started.[0m
+[0;32mI (930) network_prov_scheme_ble: BT memory released[0m
+[0;32mI (931) app_wifi: Starting provisioning[0m
+[0;32mI (938) phy_init: phy_version 4830,54550f7,Jun 20 2024,14:22:08[0m
+[0;33mW (942) phy_init: failed to load RF calibration data (0x1102), falling back to full calibration[0m
+[0;33mW (1021) phy_init: saving new calibration data because of checksum failure, mode(2)[0m
+[0;32mI (1034) wifi:mode : sta (e4:65:b8:11:7f:9c)[0m
+[0;32mI (1035) wifi:enable tsf[0m
+[0;32mI (1043) BTDM_INIT: BT controller compile version [b022216][0m
+[0;32mI (1045) BTDM_INIT: Bluetooth MAC: e4:65:b8:11:7f:9e[0m
+[0;32mI (1207) protocomm_nimble: BLE Host Task Started[0m
+[0;32mI (1218) network_prov_mgr: Provisioning started with service name : PROV_662ffe [0m
+[0;32mI (1221) app_wifi: Provisioning started[0m
+[0;32mI (1223) esp_rmaker_local: Event 1[0m
+[0;32mI (1228) app_network: Scan this QR code from the ESP RainMaker phone app for Provisioning.[0m
+[0;32mI (1235) QRCODE: Encoding below text with ECC LVL 0 & QR Code Version 5[0m
+[0;32mI (1244) QRCODE: {"ver":"v1","name":"PROV_662ffe","pop":"15bd40d0","transport":"ble"}[0m
+[0;32mI (1254) NimBLE: GAP procedure initiated: advertise; [0m
+[0;32mI (1256) NimBLE: disc_mode=2[0m
+[0;32mI (1260) NimBLE:  adv_channel_map=0 own_addr_type=0 adv_filter_policy=0 adv_itvl_min=256 adv_itvl_max=256[0m
+[0;32mI (1270) NimBLE: 
+[0m
+                                      
+  █▀▀▀▀▀█ █  ▄▄█ ▀▀ ▀▄▄▄▀▀█ █▀▀▀▀▀█   
+  █ ███ █ ██▄ █▄ ▄▀▀ ▀ ▀▀▄█ █ ███ █   
+  █ ▀▀▀ █ ▄██ ▀▀█▀█  ▄ ▄▄▀█ █ ▀▀▀ █   
+  ▀▀▀▀▀▀▀ ▀ █▄▀ ▀ ▀▄▀ █▄█ █ ▀▀▀▀▀▀▀   
+  ▀█▄▄▀▀▀ ▄ ▀ ▀ ▀█▄▀▀▀▄▀▀▄▄▄ █ ▀█▀▀   
+  ▄▄▄▀▀▄▀▀▄█▀ ▄▀ ███  ▀▄▄▀██▀▄██▀█    
+  █▀ ██▄▀ █▄▄▀▄▄█▄█▀▄▀▄▀▀▀ ▄▀▄▀ ▄▄▀   
+   ▄▀ ▄ ▀▀█ ▄█▀▀ ▀▄█▀▄ █ ▀▄█ ▀ █▀▀▄   
+  ▄█  █ ▀█▄▀  ▀▄▄▄█▀▀▀█▀   █▀▄▀▀  ▀   
+    ▄ ▄ ▀  ▄▀ ▄▀ ▀▀█ ▄ ▄█▀█ ▄█▄█▀▀▄   
+  ██ ▄▄█▀▀▄▀▄▀▄ ▄█▄▀█ ▄█ ▀▀▀▀ ▀ ▄█▀   
+    ▄ ▀█▀▄ ███▀ ▀█▄▄ ▄ █▄▀  █▀▀▀▀▄▄   
+  ▀▀▀▀▀ ▀▀▄█▀ ▀▄▄▄▄██▀█▀ ▄█▀▀▀██▄▀    
+  █▀▀▀▀▀█ ▄▄  ▄ █▀██▀  ▄█▀█ ▀ ██▀▀    
+  █ ███ █ ▀▀ ▀█▄█▄█▀█▀ ▀█ ███▀█▀▄▄█   
+  █ ▀▀▀ █ ▄█▄██▀ █▀▄ ▄███▀  ▀█▀▄ ▀    
+  ▀▀▀▀▀▀▀ ▀▀▀▀    ▀▀  ▀▀▀▀▀▀      ▀   
+                                      
+
+[0;32mI (1458) app_network: If QR code is not visible, copy paste the below URL in a browser.
+https://rainmaker.espressif.com/qrcode.html?data={"ver":"v1","name":"PROV_662ffe","pop":"15bd40d0","transport":"ble"}[0m
+[0;32mI (1477) ESP_OTA: Provisioning QR : {"ver":"v1","name":"PROV_662ffe","pop":"15bd40d0","transport":"ble"}[0m
+[0;32mI (1487) app_network: Provisioning will auto stop after 30 minute(s).[0m
+[0;32mI (71621) protocomm_nimble: mtu update event; conn_handle=0 cid=4 mtu=256[0m
+[0;32mI (73691) app_network: Secured session established![0m
+[0;32mI (87850) esp_rmaker_user_mapping: Received request for node details[0m
+[0;32mI (87851) esp_rmaker_user_mapping: Got user_id = Google_CMpVCeTaLxeAaLQyU9echt, secret_key = 609AB70F-AECB-46B7-8189-918E046C4C97[0m
+[0;32mI (87860) esp_rmaker_user_mapping: User Node mapping reset detected.[0m
+[0;32mI (87866) esp_rmaker_user_mapping: Sending status SUCCESS[0m
+[0;33mW (88122) wifi:Password length matches WPA2 standards, authmode threshold changes from OPEN to WPA2[0m
+[0;32mI (88173) app_wifi: Received Wi-Fi credentials
+	SSID     : DEVICE_2.4G
+	Password : 21031999[0m
+[0;32mI (94181) wifi:new:<9,0>, old:<1,0>, ap:<255,255>, sta:<9,0>, prof:1, snd_ch_cfg:0x0[0m
+[0;32mI (94183) wifi:state: init -> auth (0xb0)[0m
+[0;32mI (94189) wifi:state: auth -> assoc (0x0)[0m
+[0;32mI (94197) wifi:state: assoc -> run (0x10)[0m
+[0;32mI (94360) wifi:connected with DEVICE_2.4G, aid = 5, channel 9, BW20, bssid = e2:19:54:dc:26:eb[0m
+[0;32mI (94361) wifi:security: WPA2-PSK, phy: bgn, rssi: -48[0m
+[0;32mI (94373) wifi:pm start, type: 1[0m
+
+[0;32mI (94374) wifi:dp: 1, bi: 102400, li: 3, scale listen interval from 307200 us to 307200 us[0m
+[0;32mI (94453) wifi:AP's beacon interval = 102400 us, DTIM period = 1[0m
+[0;32mI (96844) wifi:<ba-add>idx:0 (ifx:0, e2:19:54:dc:26:eb), tid:0, ssn:0, winSize:64[0m
+[0;32mI (97881) esp_netif_handlers: sta ip: 192.168.1.11, mask: 255.255.255.0, gw: 192.168.1.1[0m
+[0;32mI (97882) app_network: Connected with IP Address:192.168.1.11[0m
+[0;32mI (97886) network_prov_mgr: STA Got IP[0m
+[0;32mI (97891) app_wifi: Provisioning successful[0m
+[0;32mI (97896) esp_rmaker_cmd_resp: Enabling Command-Response Module.[0m
+[0;32mI (97897) ESPNOW: espnow [version: 1.0] init[0m
+[0;32mI (97903) esp_rmaker_node: Node attribute cmd-resp created[0m
+[0;32mI (97912) esp_rmaker_local: Enabling Local Control[0m
+[0;32mI (97907) device: Device state initialized: AC power: off, temp: 25, mode: cool, fan speed: low[0m
+[0;33mW (97918) event: handler already registered, overwriting[0m
+[0;33mW (97933) event: handler already registered, overwriting[0m
+[0;32mI (97928) device: Fan state initialized: power: off, speed: low, oscillation: 0[0m
+[0;32mI (97939) esp_rmaker_local: Couldn't find POP in NVS. Generating a new one.[0m
+[0;32mI (97948) device: Light state initialized: power: off[0m
+[0;32mI (97959) esp_rmaker_local: Local Control Service Enabled[0m
+[0;33mW (97962) IR_storage: Device state not found, setting defaults.[0m
+[0;32mI (97966) esp_rmaker_local: Waiting for Wi-Fi provisioning to finish.[0m
+[0;32mI (97914) IR_storage: SPIFFS mounted successfully. Total: 113201 bytes, Used: 14307 bytes[0m
+[0;32mI (97980) esp_mqtt_glue: Connecting to a1p72mufdu6064-ats.iot.us-east-1.amazonaws.com[0m
+[0;32mI (97998) esp_rmaker_core: Waiting for MQTT connection[0m
+[0;32mI (98002) App_IR_learn: SPIFFS initialized successfully[0m
+[0;32mI (98010) App_IR_learn: IR Learn step:[0][0][0m
+[0;32mI (98014) App_IR_learn: IR learn new task created[0m
+[0;32mI (98020) App_IR_learn: IR learn task started successfully[0m
+[0;32mI (98026) Device: Initializing device...[0m
+[0;32mI (98031) gpio: GPIO[15]| InputEn: 1| OutputEn: 0| OpenDrain: 0| Pullup: 1| Pulldown: 0| Intr:0 [0m
+[0;32mI (98040) button: IoT Button Version: 4.1.3[0m
+[0;32mI (98046) gpio: GPIO[2]| InputEn: 0| OutputEn: 1| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0 [0m
+[0;32mI (98056) Device: Device initialized successfully.[0m
+[0;32mI (98060) Device: Light state task created successfully.[0m
+[0;32mI (98068) App_console: Registering IR commands[0m
+I (9[5n
+Type 'help' to get the list of commands.
+Use UP/DOWN arrows to navigate through command history.
+Press TAB when typing command name to auto-complete.
+[6n [0;32mI (98228) Ir_Remote: IR Remote Control Application Started[0m
+[0;32mI (98243) main_task: Returned from app_main()[0m
+[999C [6n [79D[0;32mIR_REMOTE_CMD> [0m[0;32mI (99258) esp-x509-crt-bundle: Certificate validated[0m
+[0;32mI (99503) NimBLE: GAP procedure initiated: stop advertising.
+[0m
+[0;32mI (99508) NimBLE: GAP procedure initiated: stop advertising.
+[0m
+[0;32mI (99513) NimBLE: GAP procedure initiated: terminate connection; conn_handle=0 hci_reason=19
+[0m
+[0;31mE (99549) protocomm_nimble: Error setting advertisement data; rc = 30[0m
+[0;32mI (99558) network_prov_mgr: Provisioning stopped[0m
+[0;32mI (99561) network_prov_scheme_ble: BTDM memory released[0m
+[0;32mI (99562) esp_rmaker_local: Event 6[0m
+[0;32mI (99573) esp_rmaker_local: Starting ESP Local control with HTTP Transport and security version: 1[0m
+[0;32mI (99580) mdns_mem: mDNS task will be created from internal RAM[0m
+[0;32mI (99587) esp_https_server: Starting server[0m
+[0;32mI (99591) esp_https_server: Server listening on port 8080[0m
+[0;32mI (99594) esp_rmaker_local: esp_local_ctrl service started with name : VH3NewQB4quKbHQFkjXRsg[0m
+[0;32mI (99606) ESP_OTA: Local Control Started.[0m
+[0;32mI (100955) esp_mqtt_glue: MQTT Connected[0m
+[0;32mI (100956) ESP_OTA: MQTT Connected.[0m
+[0;32mI (100958) esp_rmaker_cmd_resp: Checking for pending commands.[0m
+[0;32mI (100978) esp_rmaker_node_config: Generated Node config of length 771[0m
+[0;32mI (100985) esp_rmaker_core: Waiting for User Node Association.[0m
+[0;32mI (100986) esp_rmaker_ota_using_topics: Subscribing to: node/VH3NewQB4quKbHQFkjXRsg/otaurl[0m
+[0;32mI (101003) esp_rmaker_user_mapping: MQTT Publish: {"node_id":"VH3NewQB4quKbHQFkjXRsg","user_id":"Google_CMpVCeTaLxeAaLQyU9echt","secret_key":"609AB70F-AECB-46B7-8189-918E046C4C97","reset":true}[0m
+[0;31mE (101440) security1: Key mismatch. Close connection[0m
+[0;31mE (101442) app_network: Received incorrect PoP or invalid security params! event: 2[0m
+[0;31mE (101442) security1: Session setup error -1[0m
+[0;31mE (101454) protocomm_httpd: Data handler failed[0m
+[0;33mW (101455) httpd_uri: httpd_uri: uri handler execution failed[0m
+[0;32mI (101735) ESP_OTA: MQTT Published. Msg id: 51909.[0m
+[0;32mI (101738) ESP_OTA: MQTT Published. Msg id: 44237.[0m
+[0;32mI (101739) esp_rmaker_user_mapping: User Node association message published successfully.[0m
+[0;32mI (101753) ESP_OTA: MQTT Published. Msg id: 52243.[0m
+[0;33mW (101755) ESP_OTA: Unhandled RainMaker Event: 5[0m
+[0;32mI (101771) esp_rmaker_param: Params MQTT Init done.[0m
+[0;32mI (101773) esp_rmaker_param: Reporting params (init): {"Time":{"TZ":"","TZ-POSIX":""},"Local Control":{"POP":"3c212a5c","Type":1}}[0m
+[0;32mI (102471) ESP_OTA: MQTT Published. Msg id: 37553.[0m
+[0;32mI (106000) esp_rmaker_ota_using_topics: Fetching OTA details, if any.[0m
+[0;32mI (106350) ESP_OTA: MQTT Published. Msg id: 41270.[0m
+[0;33mW (106368) security1: Invalid state of session 0 (expected 1). Restarting session.[0m
+[0;31mE (106370) security1: Closing old session with id 3863819923[0m
+[0;31mE (106826) security1: Key mismatch. Close connection[0m
+[0;31mE (106827) app_network: Received incorrect PoP or invalid security params! event: 2[0m
+[0;31mE (106827) security1: Session setup error -1[0m
+[0;31mE (106840) protocomm_httpd: Data handler failed[0m
+[0;33mW (106841) httpd_uri: httpd_uri: uri handler execution failed[0m
+[0;33mW (107800) security1: Invalid state of session 0 (expected 1). Restarting session.[0m
+[0;31mE (107802) security1: Closing old session with id 3863819923[0m
+[0;31mE (108212) security1: Key mismatch. Close connection[0m
+[0;31mE (108213) security1: Session setup error -1[0m
+[0;31mE (108213) app_network: Received incorrect PoP or invalid security params! event: 2[0m
+[0;31mE (108214) protocomm_httpd: Data handler failed[0m
+[0;33mW (108227) httpd_uri: httpd_uri: uri handler execution failed[0m
+[0;32mI (109312) esp_rmaker_param: Received params: {"Time":{"TZ":"Asia/Ho_Chi_Minh"}}[0m
+[0;32mI (109314) esp_rmaker_param: Found 1 params in write request for Time[0m
+[0;32mI (109326) esp_rmaker_time_service: Received value = Asia/Ho_Chi_Minh for Time - TZ[0m
+[0;33mW (109332) ESP_OTA: Unhandled RainMaker Common Event: 6[0m
+[0;32mI (109333) esp_rmaker_time: Time not synchronised yet.[0m
+[0;32mI (109345) esp_rmaker_time: The current time is: Thu Jan  1 07:01:48 1970 +0700[+07], DST: No.[0m
+[0;33mW (109346) ESP_OTA: Unhandled RainMaker Common Event: 7[0m
+[0;32mI (109350) esp_rmaker_param: Reporting params: {"Time":{"TZ-POSIX":"<+07>-7"}}[0m
+[0;32mI (109374) esp_rmaker_param: Reporting params: {"Time":{"TZ":"Asia/Ho_Chi_Minh"}}[0m
+[0;32mI (109731) ESP_OTA: MQTT Published. Msg id: 20769.[0m
+[0;32mI (110039) ESP_OTA: MQTT Published. Msg id: 31779.[0m
+[0;33mW (111629) security1: Invalid state of session 0 (expected 1). Restarting session.[0m
+[0;31mE (111631) security1: Closing old session with id 3863819923[0m
+[0;32mI (111934) app_network: Secured session established![0m
+[0;32mI (112014) esp_rmaker_node_config: Generated Node config of length 771[0m
+[0K[0;32mIR_REMOTE_CMD> [0m[15C
+[6n [999C [6n [79D[0;32mIR_REMOTE_CMD> [0m[0;33mW (129689) httpd_txrx: httpd_sock_err: error in recv : 104[0m
+[0K[0;32mIR_REMOTE_CMD> [0ml[16C[0;32mI (153150) esp_rmaker_time: SNTP Synchronised.[0m
+[0;32mI (153152) esp_rmaker_time: The current time is: Sat Jul 12 14:08:24 2025 +0700[+07], DST: No.[0m
+[0K[0;32mIR_REMOTE_CMD> [0ml[16C
+Unrecognized command
+[6n [999C [6n [79D[0;32mIR_REMOTE_CMD> [0m[0K[0;32mIR_REMOTE_CMD> [0m[15C
+[6n [999C [6n [79D[0;32mIR_REMOTE_CMD> [0m[0K[0;32mIR_REMOTE_CMD> [0m[15C
+[6n [999C [6n [79D[0;32mIR_REMOTE_CMD> [0m[0K[0;32mIR_REMOTE_CMD> [0m[15C
+[6n [999C [6n [79D[0;32mIR_REMOTE_CMD> [0m[0K[0;32mIR_REMOTE_CMD> [0ml[16C[0K[0;32mIR_REMOTE_CMD> [0mli[17C[0K[0;32mIR_REMOTE_CMD> [0mlis[18C[0K[0;32mIR_REMOTE_CMD> [0mlist[19C[0K[0;32mIR_REMOTE_CMD> [0mlist [20C[0K[0;32mIR_REMOTE_CMD> [0mlist [20C
+[0;32mI (191405) SPIFFS: IR Key: ac_on_26_cool_1[0m
+[0;32mI (191406) SPIFFS: IR Key: ac_off_25_cool_1[0m
+[0;32mI (191407) SPIFFS: IR Key: ac_on_24_cool_1[0m
+[0;32mI (191418) SPIFFS: IR Key: ac_on_23_cool_1[0m
+[0;32mI (191419) SPIFFS: IR Key: ac_on_22_cool_1[0m
+[0;32mI (191420) SPIFFS: IR Key: ac_on_21_cool_1[0m
+[0;32mI (191431) SPIFFS: IR Key: ac_on_20_cool_1[0m
+[0;32mI (191432) SPIFFS: IR Key: ac_on_25_cool_1[0m
+[0;32mI (191433) SPIFFS: IR Key: ac_on_27_cool_1[0m
+[0;32mI (191444) SPIFFS: IR Key: ac_on_28_cool_1[0m
+[0;32mI (191445) SPIFFS: IR Key: ac_on_29_cool_1[0m
+[0;32mI (191456) SPIFFS: IR Key: ac_on_30_cool_1[0m
+[0;32mI (191457) SPIFFS: IR Key: ac_off_26_cool_1[0m
+[0;32mI (191458) SPIFFS: IR Key: fan_on_1_0[0m
+[0;32mI (191469) SPIFFS: IR Key: fan_off_1_0[0m
+[0;32mI (191470) SPIFFS: IR Key: fan_on_1_1[0m
+[0;32mI (191471) SPIFFS: IR Key: fan_on_0_0[0m
+[0;32mI (191482) SPIFFS: IR Key: fan_on_2_0[0m
+[0;32mI (191483) SPIFFS: IR Key: fan_off[0m
+[0;32mI (191484) SPIFFS: IR Key: fan_on[0m
+[0;32mI (191497) SPIFFS: Total IR keys found: 20[0m
+[0;32mI (191498) IR_CMD: Listing all IR keys is not implemented yet.[0m
+[6n [999C [6n [79D[0;32mIR_REMOTE_CMD> [0m[0K[0;32mIR_REMOTE_CMD> [0mt[16C[0K[0;32mIR_REMOTE_CMD> [0mtr[17C[0K[0;32mIR_REMOTE_CMD> [0mtrn[18C[0K[0;32mIR_REMOTE_CMD> [0mtrna[19C[0K[0;32mIR_REMOTE_CMD> [0mtrnas[20C[0K[0;32mIR_REMOTE_CMD> [0mtrna[19C[0K[0;32mIR_REMOTE_CMD> [0mtrn[18C[0K[0;32mIR_REMOTE_CMD> [0mtr[17C[0K[0;32mIR_REMOTE_CMD> [0mtra[18C[0K[0;32mIR_REMOTE_CMD> [0mtras[19C[0K[0;32mIR_REMOTE_CMD> [0mtra[18C[0K[0;32mIR_REMOTE_CMD> [0mtran[19C[0K[0;32mIR_REMOTE_CMD> [0mtrans[20C[0K[0;32mIR_REMOTE_CMD> [0mtransm[21C[0K[0;32mIR_REMOTE_CMD> [0mtransmi[22C[0K[0;32mIR_REMOTE_CMD> [0mtransmit[0;36;49m <Name for ir cmd transmit>[0m[23C[0K[0;32mIR_REMOTE_CMD> [0mtransmit [24C[0K[0;32mIR_REMOTE_CMD> [0mtransmit a[25C[0K[0;32mIR_REMOTE_CMD> [0mtransmit ac[26C[0K[0;32mIR_REMOTE_CMD> [0mtransmit ac_[27C[0K[0;32mIR_REMOTE_CMD> [0mtransmit ac_o[28C[0K[0;32mIR_REMOTE_CMD> [0mtransmit ac_on[29C[0K[0;32mIR_REMOTE_CMD> [0mtransmit ac_on_[30C[0K[0;32mIR_REMOTE_CMD> [0mtransmit ac_on_2[31C[0K[0;32mIR_REMOTE_CMD> [0mtransmit ac_on_26[32C[0K[0;32mIR_REMOTE_CMD> [0mtransmit ac_on_26_[33C[0K[0;32mIR_REMOTE_CMD> [0mtransmit ac_on_26_c[34C[0K[0;32mIR_REMOTE_CMD> [0mtransmit ac_on_26_co[35C[0K[0;32mIR_REMOTE_CMD> [0mtransmit ac_on_26_coo[36C[0K[0;32mIR_REMOTE_CMD> [0mtransmit ac_on_26_cool[37C[0K[0;32mIR_REMOTE_CMD> [0mtransmit ac_on_26_cool_[38C[0K[0;32mIR_REMOTE_CMD> [0mtransmit ac_on_26_cool_1[39C[0K[0;32mIR_REMOTE_CMD> [0mtransmit ac_on_26_cool_1[39C
+[0;32mI (210453) Ir-learn: RX Task suspended[0m
+[0;32mI (210454) IR_CMD: IR transmit command send for key: ac_on_26_cool_1[0m
+[0;32mI (210455) App_IR_learn: IR transmit command for key: ac_on_26_cool_1[0m
+[6n [0;32mI (210470) IR: IR data loaded from /spiffs/ac_on_26_cool_1.ir[0m
+[0;32mI (210476) gpio: GPIO[12]| InputEn: 0| OutputEn: 1| OpenDrain: 0| Pullup: 1| Pulldown: 0| Intr:0 [0m
+[0;32mI (210479) Driver_IR_learn: Starting IR transmission...[0m
+[999C [6n [79D[0;32mIR_REMOTE_CMD> [0m[0;32mI (210846) gpio: GPIO[12]| InputEn: 0| OutputEn: 0| OpenDrain: 0| Pullup: 1| Pulldown: 0| Intr:0 [0m
+[0;32mI (210848) Driver_IR_learn: IR transmission completed[0m
+[0;32mI (210859) device: Parsed AC state -> power: on, temp: 26, mode: cool, fan: 1[0m
+[0;32mI (210869) device: ===============================================[0m
+[0;32mI (210870) device: Updated device state from key: ac_on_26_cool_1[0m
+[0;32mI (210881) device: Current state: AC power: on, temp: 26, mode: cool, fan speed: medium[0m
+[0;32mI (210883) device: Current fan state: power: off, speed: low, oscillation: 0[0m
+[0;32mI (210894) device: Current light state: power: off[0m
+[0;32mI (210895) device: ===============================================[0m
+[0;31mE (210906) rmt: rmt_rx_register_to_group(130): no free rx channels[0m
+[0;31mE (210907) rmt: rmt_new_rx_channel(224): register channel failed[0m
+[0;31mE (210918) Ir-learn: Failed to create RX channel: ESP_ERR_NOT_FOUND[0m
+[0;31mE (210930) rmt: rmt_enable(212): invalid argument[0m
+[0;32mI (210930) Ir-learn: RX Channel restarted[0m
+[0;32mI (210931) Ir-learn: RX Task resumed[0m
+[0K[0;32mIR_REMOTE_CMD> [0m[15C
+[6n [999C [6n [79D[0;32mIR_REMOTE_CMD> [0m[0K[0;32mIR_REMOTE_CMD> [0m[15C
+[6n [999C [6n [79D[0;32mIR_REMOTE_CMD> [0m[0K[0;32mIR_REMOTE_CMD> [0mtransmit ac_on_26_cool_1[39C[0K[0;32mIR_REMOTE_CMD> [0mtransmit ac_on_26_cool_1[39C
+[0;32mI (326168) IR_CMD: IR transmit command send for key: ac_on_26_cool_1[0m
+[0;32mI (326168) Ir-learn: RX Task suspended[0m
+[0;32mI (326171) App_IR_learn: IR transmit command for key: ac_on_26_cool_1[0m
+[6n [0;32mI (326185) IR: IR data loaded from /spiffs/ac_on_26_cool_1.ir[0m
+[0;32mI (326191) gpio: GPIO[12]| InputEn: 0| OutputEn: 1| OpenDrain: 0| Pullup: 1| Pulldown: 0| Intr:0 [0m
+[0;32mI (326193) Driver_IR_learn: Starting IR transmission...[0m
+[999C [6n [79D[0;32mIR_REMOTE_CMD> [0m[0;32mI (326561) gpio: GPIO[12]| InputEn: 0| OutputEn: 0| OpenDrain: 0| Pullup: 1| Pulldown: 0| Intr:0 [0m
+[0;32mI (326562) Driver_IR_learn: IR transmission completed[0m
+[0;32mI (326574) device: Parsed AC state -> power: on, temp: 26, mode: cool, fan: 1[0m
+[0;32mI (326576) device: ===============================================[0m
+[0;32mI (326588) device: Updated device state from key: ac_on_26_cool_1[0m
+[0;32mI (326589) device: Current state: AC power: on, temp: 26, mode: cool, fan speed: medium[0m
+[0;32mI (326600) device: Current fan state: power: off, speed: low, oscillation: 0[0m
+[0;32mI (326611) device: Current light state: power: off[0m
+[0;32mI (326612) device: ===============================================[0m
+[0;31mE (326623) rmt: rmt_rx_register_to_group(130): no free rx channels[0m
+[0;31mE (326624) rmt: rmt_new_rx_channel(224): register channel failed[0m
+[0;31mE (326636) Ir-learn: Failed to create RX channel: ESP_ERR_NOT_FOUND[0m
+[0;31mE (326637) rmt: rmt_enable(212): invalid argument[0m
+[0;32mI (326648) Ir-learn: RX Channel restarted[0m
+[0;32mI (326648) Ir-learn: RX Task resumed[0m
+[0K[0;32mIR_REMOTE_CMD> [0m[15C
+[6n [999C [6n [79D[0;32mIR_REMOTE_CMD> [0m[0K[0;32mIR_REMOTE_CMD> [0ml[16C[0K[0;32mIR_REMOTE_CMD> [0mle[17C[0K[0;32mIR_REMOTE_CMD> [0mlea[18C[0K[0;32mIR_REMOTE_CMD> [0mlear[19C[0K[0;32mIR_REMOTE_CMD> [0mlearn[0;36;49m <Name for ir learn cmd>[0m[20C[0K[0;32mIR_REMOTE_CMD> [0mlearn [21C[0K[0;32mIR_REMOTE_CMD> [0mlearn a[22C[0K[0;32mIR_REMOTE_CMD> [0mlearn ac[23C[0K[0;32mIR_REMOTE_CMD> [0mlearn ac_[24C[0K[0;32mIR_REMOTE_CMD> [0mlearn ac[23C[0K[0;32mIR_REMOTE_CMD> [0mlearn a[22C[0K[0;32mIR_REMOTE_CMD> [0mlearn [21C[0K[0;32mIR_REMOTE_CMD> [0mlearn f[22C[0K[0;32mIR_REMOTE_CMD> [0mlearn fa[23C[0K[0;32mIR_REMOTE_CMD> [0mlearn fan[24C[0K[0;32mIR_REMOTE_CMD> [0mlearn fan_[25C[0K[0;32mIR_REMOTE_CMD> [0mlearn fan_p[26C[0K[0;32mIR_REMOTE_CMD> [0mlearn fan_[25C[0K[0;32mIR_REMOTE_CMD> [0mlearn fan_o[26C[0K[0;32mIR_REMOTE_CMD> [0mlearn fan_on[27C[0K[0;32mIR_REMOTE_CMD> [0mlearn fan_on[27C
+[0;32mI (557585) IR_CMD: IR learn command for key: fan_on[0m
+[0;32mI (557586) Ir-learn: Start learning IR cmd for key: fan_on[0m
+[0;32mI (557588) App_IR_learn: IR Learn ready[0m
+[6n [0;31mE (557599) rmt: rmt_rx_register_to_group(130): no free rx channels[0m
+[0;31mE (557604) rmt: rmt_new_rx_channel(224): register channel failed[0m
+[0;31mE (557615) Ir-learn: Failed to create RX channel: ESP_ERR_NOT_FOUND[0m
+[999C [0;31mE (557616) rmt: rmt_enable(212): invalid argument[0m
+[0;31mE (557627) rmt: rmt_receive(363): invalid argument[0m
+ESP_ERROR_CHECK failed: esp_err_t 0x102 (ESP_ERR_INVALID_ARG) at 0x400dd187
+file: "./main/src/ir_learn.c" line 487
+func: ir_learn_task
+expression: rmt_receive(rx_channel_handle, learn_param->ctx->rmt_rx.received_symbols, learn_param->ctx->rmt_rx.num_symbols, &ir_learn_rmt_rx_cfg)
+
+abort() was called at PC 0x400918eb on core 1
+
+
+Backtrace: 0x40081af6:0x3fff2c00 0x400918f5:0x3fff2c20 0x40097315:0x3fff2c40 0x400918eb:0x3fff2cb0 0x400dd187:0x3fff2ce0 0x40091ca2:0x3fff2d50
+
+
+
+
+ELF file SHA256: 9d62702c0
+
+Rebooting...
+ets Jul 29 2019 12:21:46
+
+rst:0xc (SW_CPU_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:5940
+load:0x40078000,len:15216
+ho 0 tail 12 room 4
+load:0x40080400,len:4
+load:0x40080404,len:3492
+entry 0x400805d0
+[0;32mI (601) cpu_start: Multicore app[0m
+[0;32mI (609) cpu_start: Pro cpu start user code[0m
+[0;32mI (609) cpu_start: cpu freq: 240000000 Hz[0m
+[0;32mI (609) app_init: Application information:[0m
+[0;32mI (612) app_init: Project name:     ir-learn[0m
+[0;32mI (617) app_init: App version:      1.0[0m
+[0;32mI (622) app_init: Compile time:     Jul 12 2025 14:03:09[0m
+[0;32mI (628) app_init: ELF file SHA256:  9d62702c0...[0m
+[0;32mI (633) app_init: ESP-IDF:          v5.3.1-dirty[0m
+[0;32mI (638) efuse_init: Min chip rev:     v0.0[0m
+[0;32mI (643) efuse_init: Max chip rev:     v3.99 [0m
+[0;32mI (648) efuse_init: Chip rev:         v3.1[0m
+[0;32mI (653) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (660) heap_init: At 3FFAFF10 len 000000F0 (0 KiB): DRAM[0m
+[0;32mI (666) heap_init: At 3FFB6388 len 00001C78 (7 KiB): DRAM[0m
+[0;32mI (672) heap_init: At 3FFB9A20 len 00004108 (16 KiB): DRAM[0m
+[0;32mI (678) heap_init: At 3FFCBA80 len 00014580 (81 KiB): DRAM[0m
+[0;32mI (684) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (691) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (697) heap_init: At 4009DDB0 len 00002250 (8 KiB): IRAM[0m
+[0;32mI (705) spi_flash: detected chip: generic[0m
+[0;32mI (708) spi_flash: flash io: dio[0m
+[0;32mI (713) coexist: coex firmware version: 4482466[0m
+[0;32mI (718) main_task: Started on CPU0[0m
+[0;32mI (721) main_task: Calling app_main()[0m
+[0;32mI (750) wifi:wifi driver task: 3ffd0964, prio:23, stack:6656, core=0[0m
+[0;32mI (760) wifi:wifi firmware version: ccaebfa[0m
+[0;32mI (761) wifi:wifi certification version: v7.0[0m
+[0;32mI (761) wifi:config NVS flash: enabled[0m
+[0;32mI (761) wifi:config nano formating: disabled[0m
+[0;32mI (765) wifi:Init data frame dynamic rx buffer num: 32[0m
+[0;32mI (770) wifi:Init static rx mgmt buffer num: 5[0m
+[0;32mI (774) wifi:Init management short buffer num: 32[0m
+[0;32mI (779) wifi:Init dynamic tx buffer num: 32[0m
+[0;32mI (783) wifi:Init static rx buffer size: 1600[0m
+[0;32mI (787) wifi:Init static rx buffer num: 10[0m
+[0;32mI (790) wifi:Init dynamic rx buffer num: 32[0m
+[0;32mI (796) wifi_init: rx ba win: 6[0m
+[0;32mI (798) wifi_init: accept mbox: 6[0m
+[0;32mI (802) wifi_init: tcpip mbox: 32[0m
+[0;32mI (806) wifi_init: udp mbox: 6[0m
+[0;32mI (810) wifi_init: tcp mbox: 6[0m
+[0;32mI (814) wifi_init: tcp tx win: 5760[0m
+[0;32mI (818) wifi_init: tcp rx win: 5760[0m
+[0;32mI (822) wifi_init: tcp mss: 1440[0m
+[0;32mI (826) wifi_init: WiFi IRAM OP enabled[0m
+[0;32mI (830) wifi_init: WiFi RX IRAM OP enabled[0m
+[0;32mI (846) esp_rmaker_work_queue: Work Queue created.[0m
+[0;32mI (858) esp_mqtt_glue: AWS PPI: ?Platform=APN3|A0|RM|EX00|RMDev|1x0|E465B8117F9C[0m
+[0;32mI (858) esp_mqtt_glue: Initialising MQTT[0m
+[0;32mI (861) esp_rmaker_mqtt_budget: MQTT Budgeting initialised. Default: 100, Max: 1024, Revive count: 1, Revive period: 5[0m
+[0;32mI (872) ESP_OTA: RainMaker Initialised.[0m
+[0;32mI (876) esp_rmaker_node: Node ID ----- VH3NewQB4quKbHQFkjXRsg[0m
+[0;32mI (882) esp_rmaker_ota_using_topics: OTA enabled with Topics[0m
+[0;32mI (890) esp_rmaker_ota: OTA state = 2[0m
+[0;32mI (893) esp_rmaker_time: Initializing SNTP. Using the SNTP server: pool.ntp.org[0m
+[0;32mI (906) esp_rmaker_time_service: Time service enabled[0m
+[0;32mI (907) esp_rmaker_core: Starting RainMaker Work Queue task[0m
+[0;32mI (913) esp_rmaker_work_queue: RainMaker Work Queue task started.[0m
+[0;32mI (924) network_prov_scheme_ble: BT memory released[0m
+[0;32mI (926) app_wifi: Already provisioned, starting Wi-Fi STA[0m
+[0;32mI (932) network_prov_scheme_ble: BTDM memory released[0m
+[0;32mI (937) esp_rmaker_local: Event 6[0m
+[0;32mI (942) phy_init: phy_version 4830,54550f7,Jun 20 2024,14:22:08[0m
+[0;33mW (1023) phy_init: saving new calibration data because of checksum failure, mode(0)[0m
+[0;32mI (1067) wifi:mode : sta (e4:65:b8:11:7f:9c)[0m
+[0;32mI (1068) wifi:enable tsf[0m
+[0;32mI (3486) wifi:new:<9,0>, old:<1,0>, ap:<255,255>, sta:<9,0>, prof:1, snd_ch_cfg:0x0[0m
+[0;32mI (3488) wifi:state: init -> auth (0xb0)[0m
+[0;32mI (3496) wifi:state: auth -> assoc (0x0)[0m
+[0;32mI (3504) wifi:state: assoc -> run (0x10)[0m
+[0;32mI (3604) wifi:connected with DEVICE_2.4G, aid = 5, channel 9, BW20, bssid = e2:19:54:dc:26:eb[0m
+[0;32mI (3605) wifi:security: WPA2-PSK, phy: bgn, rssi: -55[0m
+[0;32mI (3609) wifi:pm start, type: 1[0m
+
+[0;32mI (3610) wifi:dp: 1, bi: 102400, li: 3, scale listen interval from 307200 us to 307200 us[0m
+[0;32mI (3619) wifi:AP's beacon interval = 102400 us, DTIM period = 1[0m
+[0;32mI (5716) wifi:<ba-add>idx:0 (ifx:0, e2:19:54:dc:26:eb), tid:0, ssn:0, winSize:64[0m
+[0;32mI (7131) esp_netif_handlers: sta ip: 192.168.1.11, mask: 255.255.255.0, gw: 192.168.1.1[0m
+[0;32mI (7132) app_network: Connected with IP Address:192.168.1.11[0m
+[0;32mI (7136) esp_rmaker_cmd_resp: Enabling Command-Response Module.[0m
+[0;32mI (7137) ESPNOW: espnow [version: 1.0] init[0m
+[0;32mI (7142) esp_rmaker_node: Node attribute cmd-resp created[0m
+[0;32mI (7147) device: Device state initialized: AC power: off, temp: 25, mode: cool, fan speed: low[0m
+[0;32mI (7152) esp_rmaker_local: Enabling Local Control[0m
+[0;32mI (7162) device: Fan state initialized: power: off, speed: low, oscillation: 0[0m
+[0;32mI (7169) esp_rmaker_local: Local Control Service Enabled[0m
+[0;32mI (7175) device: Light state initialized: power: off[0m
+[0;32mI (7181) esp_rmaker_local: Starting ESP Local control with HTTP Transport and security version: 1[0m
+[0;32mI (7154) IR_storage: SPIFFS mounted successfully. Total: 113201 bytes, Used: 14307 bytes[0m
+[0;32mI (7199) mdns_mem: mDNS task will be created from internal RAM[0m
+[0;32mI (7214) esp_https_server: Starting server[0m
+[0;32mI (7218) App_IR_learn: SPIFFS initialized successfully[0m
+[0;32mI (7219) esp_https_server: Server listening on port 8080[0m
+[0;32mI (7229) esp_rmaker_local: esp_local_ctrl service started with name : VH3NewQB4quKbHQFkjXRsg[0m
+[0;32mI (7237) ESP_OTA: Local Control Started.[0m
+[0;32mI (7237) esp_mqtt_glue: Connecting to a1p72mufdu6064-ats.iot.us-east-1.amazonaws.com[0m
+[0;32mI (7250) esp_rmaker_core: Waiting for MQTT connection[0m
+[0;32mI (7242) App_IR_learn: IR Learn step:[0][0][0m
+[0;32mI (7261) App_IR_learn: IR learn new task created[0m
+[0;32mI (7267) wifi:<ba-add>idx:1 (ifx:0, e2:19:54:dc:26:eb), tid:6, ssn:2, winSize:64[0m
+[0;32mI (7274) App_IR_learn: IR learn task started successfully[0m
+[0;32mI (7279) Device: Initializing device...[0m
+[0;32mI (7284) gpio: GPIO[15]| InputEn: 1| OutputEn: 0| OpenDrain: 0| Pullup: 1| Pulldown: 0| Intr:0 [0m
+[0;32mI (7293) button: IoT Button Version: 4.1.3[0m
+[0;32mI (7298) gpio: GPIO[2]| InputEn: 0| OutputEn: 1| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0 [0m
+[0;32mI (7307) Device: Device initialized successfully.[0m
+[0;32mI (7313) Device: Light state task created successfully.[0m
+[0;32mI (7325) App_console: Registering IR commands[0m
+[5n
+Type 'help' to get the list of commands.
+Use UP/DOWN arrows to navigate through command history.
+Press TAB when typing command name to auto-complete.
+[6n [0;32mI (7386) Ir_Remote: IR Remote Control Application Started[0m
+[0;32mI (7400) main_task: Returned from app_main()[0m
+[999C [6n [79D[0;32mIR_REMOTE_CMD> [0m[0;32mI (8010) esp-x509-crt-bundle: Certificate validated[0m
+[0;32mI (11822) esp_mqtt_glue: MQTT Connected[0m
+[0;32mI (11824) ESP_OTA: MQTT Connected.[0m
+[0;32mI (11826) esp_rmaker_cmd_resp: Checking for pending commands.[0m
+[0;32mI (11836) esp_rmaker_node_config: Generated Node config of length 771[0m
+[0;32mI (11843) esp_rmaker_param: Params MQTT Init done.[0m
+[0;32mI (11845) esp_rmaker_param: Reporting params (init): {"Time":{"TZ":"Asia/Ho_Chi_Minh","TZ-POSIX":"<+07>-7"},"Local Control":{"POP":"3c212a5c","Type":1}}[0m
+[0;32mI (11860) esp_rmaker_ota_using_topics: Subscribing to: node/VH3NewQB4quKbHQFkjXRsg/otaurl[0m
+[0;32mI (12457) ESP_OTA: MQTT Published. Msg id: 43705.[0m
+[0;32mI (12459) ESP_OTA: MQTT Published. Msg id: 1946.[0m
+[0;32mI (12460) ESP_OTA: MQTT Published. Msg id: 34487.[0m
+[0;32mI (16874) esp_rmaker_ota_using_topics: Fetching OTA details, if any.[0m
+[0;32mI (17175) ESP_OTA: MQTT Published. Msg id: 8570.[0m
+[0;32mI (33300) esp_rmaker_time: SNTP Synchronised.[0m
+[0;32mI (33302) esp_rmaker_time: The current time is: Sat Jul 12 14:15:42 2025 +0700[+07], DST: No.[0m

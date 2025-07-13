@@ -1,0 +1,13 @@
+# Target labels
+ bootloader
+# Source files and their labels
+/Users/dangminhtam/esp32-test/ir-remote/build/CMakeFiles/bootloader
+/Users/dangminhtam/esp32-test/ir-remote/build/CMakeFiles/bootloader.rule
+/Users/dangminhtam/esp32-test/ir-remote/build/CMakeFiles/bootloader-complete.rule
+/Users/dangminhtam/esp32-test/ir-remote/build/bootloader-prefix/src/bootloader-stamp/bootloader-build.rule
+/Users/dangminhtam/esp32-test/ir-remote/build/bootloader-prefix/src/bootloader-stamp/bootloader-configure.rule
+/Users/dangminhtam/esp32-test/ir-remote/build/bootloader-prefix/src/bootloader-stamp/bootloader-download.rule
+/Users/dangminhtam/esp32-test/ir-remote/build/bootloader-prefix/src/bootloader-stamp/bootloader-install.rule
+/Users/dangminhtam/esp32-test/ir-remote/build/bootloader-prefix/src/bootloader-stamp/bootloader-mkdir.rule
+/Users/dangminhtam/esp32-test/ir-remote/build/bootloader-prefix/src/bootloader-stamp/bootloader-patch.rule
+/Users/dangminhtam/esp32-test/ir-remote/build/bootloader-prefix/src/bootloader-stamp/bootloader-update.rule

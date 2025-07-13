@@ -1,0 +1,96 @@
+[1/7] Building C object esp-idf/main/CMakeFiles/__idf_main.dir/src/ir_learn.c.obj
+/Users/dangminhtam/esp32-test/ir-remote/main/src/ir_learn.c:431:18: warning: 'ir_clone_data' defined but not used [-Wunused-function]
+  431 | static esp_err_t ir_clone_data(struct ir_learn_sub_list_head *dst, const struct ir_learn_sub_list_head *src)
+      |                  ^~~~~~~~~~~~~
+[2/7] Linking C static library esp-idf/main/libmain.a
+[3/7] Generating ld/sections.ld
+[4/7] Linking CXX executable ir-learn.elf
+[5/7] Generating binary image from built executable
+esptool.py v4.8.1
+Creating esp32 image...
+Merged 2 ELF sections
+Successfully created esp32 image.
+Generated /Users/dangminhtam/esp32-test/ir-remote/build/ir-learn.bin
+[6/7] cd /Users/dangminhtam/esp32-test/ir-remote/build/esp-idf/esptool_py && /Users/dangminhtam/.espressif/python_env/idf5.3_py3.13_env/bin/python /Users/dangminhtam/esp/esp-idf/components/partition_table/check_sizes.py --offset 0xc000 partition --type app /Users/dangminhtam/esp32-test/ir-remote/build/partition_table/partition-table.bin /Users/dangminhtam/esp32-test/ir-remote/build/ir-learn.bin
+ir-learn.bin binary size 0x182340 bytes. Smallest app partition is 0x1c0000 bytes. 0x3dcc0 bytes (14%) free.
+[6/7] cd /Users/dangminhtam/esp/esp-idf/components/esptool_py && /opt/local/bin/cmake -D IDF_PATH=/Users/dangminhtam/esp/esp-idf -D "SERIAL_TOOL=/Users/dangminhtam/.espressif/python_env/idf5.3_py3.13_env/bin/python;;/Users/dangminhtam/esp/esp-idf/components/esptool_py/esptool/esptool.py;--chip;esp32" -D "SERIAL_TOOL_ARGS=--before=default_reset;--after=hard_reset;write_flash;@app-flash_args" -D WORKING_DIRECTORY=/Users/dangminhtam/esp32-test/ir-remote/build -P /Users/dangminhtam/esp/esp-idf/components/esptool_py/run_serial_tool.cmake
+esptool.py --chip esp32 -p /dev/cu.usbserial-10 -b 460800 --before=default_reset --after=hard_reset write_flash --flash_mode dio --flash_freq 40m --flash_size 4MB 0x20000 ir-learn.bin
+esptool.py v4.8.1
+Serial port /dev/cu.usbserial-10
+Connecting....
+Chip is ESP32-D0WD-V3 (revision v3.1)
+Features: WiFi, BT, Dual Core, 240MHz, VRef calibration in efuse, Coding Scheme None
+Crystal is 40MHz
+MAC: e4:65:b8:11:7f:9c
+Uploading stub...
+Running stub...
+Stub running...
+Changing baud rate to 460800
+Changed.
+Configuring flash size...
+Flash will be erased from 0x00020000 to 0x001a2fff...
+Compressed 1581888 bytes to 957512...
+Writing at 0x00020000... (1 %)
+Writing at 0x0002f52a... (3 %)
+Writing at 0x0003dfe6... (5 %)
+Writing at 0x0004cb7c... (6 %)
+Writing at 0x00056dae... (8 %)
+Writing at 0x0005ceec... (10 %)
+Writing at 0x00062c5b... (11 %)
+Writing at 0x00068741... (13 %)
+Writing at 0x00075997... (15 %)
+Writing at 0x0007bd7f... (16 %)
+Writing at 0x00081a98... (18 %)
+Writing at 0x0008767a... (20 %)
+Writing at 0x0008d719... (22 %)
+Writing at 0x00093456... (23 %)
+Writing at 0x00098f67... (25 %)
+Writing at 0x0009ed29... (27 %)
+Writing at 0x000a47df... (28 %)
+Writing at 0x000aa78e... (30 %)
+Writing at 0x000b117a... (32 %)
+Writing at 0x000b7a51... (33 %)
+Writing at 0x000bdb7b... (35 %)
+Writing at 0x000c3cb1... (37 %)
+Writing at 0x000c9a07... (38 %)
+Writing at 0x000cfa5d... (40 %)
+Writing at 0x000d59dd... (42 %)
+Writing at 0x000db8f3... (44 %)
+Writing at 0x000e15a5... (45 %)
+Writing at 0x000e71f1... (47 %)
+Writing at 0x000ed140... (49 %)
+Writing at 0x000f2ec0... (50 %)
+Writing at 0x000f9a0d... (52 %)
+Writing at 0x000ff7cf... (54 %)
+Writing at 0x001054e4... (55 %)
+Writing at 0x0010be03... (57 %)
+Writing at 0x00111af2... (59 %)
+Writing at 0x00117991... (61 %)
+Writing at 0x0011d5ab... (62 %)
+Writing at 0x00122951... (64 %)
+Writing at 0x00127cd5... (66 %)
+Writing at 0x0012d1d6... (67 %)
+Writing at 0x00132589... (69 %)
+Writing at 0x00137bd5... (71 %)
+Writing at 0x0013d33f... (72 %)
+Writing at 0x00143027... (74 %)
+Writing at 0x001487ba... (76 %)
+Writing at 0x0014e487... (77 %)
+Writing at 0x0015410a... (79 %)
+Writing at 0x00159b0e... (81 %)
+Writing at 0x0015fb09... (83 %)
+Writing at 0x00165f26... (84 %)
+Writing at 0x0016c306... (86 %)
+Writing at 0x001730a4... (88 %)
+Writing at 0x0017bdfe... (89 %)
+Writing at 0x001830da... (91 %)
+Writing at 0x00188eca... (93 %)
+Writing at 0x0018ed2b... (94 %)
+Writing at 0x00194816... (96 %)
+Writing at 0x0019a629... (98 %)
+Writing at 0x0019f887... (100 %)
+Wrote 1581888 bytes (957512 compressed) at 0x00020000 in 23.9 seconds (effective 529.9 kbit/s)...
+Hash of data verified.
+
+Leaving...
+Hard resetting via RTS pin...

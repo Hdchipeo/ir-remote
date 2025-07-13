@@ -60,11 +60,10 @@ static void ir_send_cb(ir_learn_state_t state, uint8_t sub_step, struct ir_learn
         ESP_LOGE(TAG, "IR Learn failed, retry");
         light_flag = false;
         break;
-    case IR_LEARN_STATE_STEP:
-        break;
     case IR_LEARN_STATE_RECEIVE:
         ESP_LOGI(TAG, "IR Learn receive step: %d", sub_step);
         break;
+    case IR_LEARN_STATE_STEP:
     default:
         ESP_LOGI(TAG, "IR Learn step:[%d][%d]", state, sub_step);
         break;
@@ -128,7 +127,7 @@ static esp_err_t ir_learn_init_task(ir_learn_result_cb cb)
 
     const ir_learn_cfg_t config = {
         .learn_count = IR_LEARN_COUNT,
-        .task_stack = 4096 * 3,
+        .task_stack = 4096 * 5,
         .task_priority = 5,
         .task_affinity = 1,
         .callback = cb,

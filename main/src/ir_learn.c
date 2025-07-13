@@ -244,9 +244,11 @@ static esp_err_t ir_learn_start(ir_learn_t *ctx)
     // if (!ctx->running)
     // {
     // ctx->running = true;
+
     init_rmt_rx(ctx);
     rmt_enable(rx_channel_handle);
     ir_learn_remove_all_symbol(ctx);
+    ESP_LOGI(TAG, "RX Channel initialized and enabled");
     // }
     // else
     // {
@@ -382,7 +384,7 @@ static esp_err_t ir_learn_active_receive_loop(ir_learn_common_param_t *learn_par
 
     while (learn_param->ctx->learned_count < learn_param->ctx->learn_count)
     {
-        if (xQueueReceive(learn_param->ctx->receive_queue, &learn_data, pdMS_TO_TICKS(10000)) == pdTRUE)
+        if (xQueueReceive(learn_param->ctx->receive_queue, &learn_data, portMAX_DELAY) == pdTRUE)
         {
             bool success = ir_learn_process_rx_data(learn_param, &learn_data);
             if (!success)
@@ -468,7 +470,7 @@ static void ir_learn_task(void *arg)
     learn_param = (ir_learn_common_param_t *)arg;
     ir_event_cmd_t ir_event;
 
-    ir_learn_restart(learn_param->ctx);
+    ir_learn_start(learn_param->ctx);
 
     while (1)
     {
@@ -769,7 +771,7 @@ esp_err_t ir_learn_new(const ir_learn_cfg_t *cfg, ir_learn_handle_t *handle_out)
 
     SLIST_INIT(&ir_learn_ctx->learn_list);
     ir_learn_ctx->learn_count = cfg->learn_count;
-    ir_learn_ctx->rmt_rx.num_symbols = RMT_RX_MEM_BLOCK_SIZE * 4;
+    ir_learn_ctx->rmt_rx.num_symbols = RMT_RX_MEM_BLOCK_SIZE * 8;
     ir_learn_ctx->rmt_rx.received_symbols = (rmt_symbol_word_t *)heap_caps_malloc(
         ir_learn_ctx->rmt_rx.num_symbols * sizeof(rmt_symbol_word_t),
         MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
