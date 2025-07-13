@@ -60,11 +60,22 @@ static void ir_send_cb(ir_learn_state_t state, uint8_t sub_step, struct ir_learn
         ESP_LOGE(TAG, "IR Learn failed, retry");
         light_flag = false;
         break;
-    case IR_LEARN_STATE_STEP:
-        break;
     case IR_LEARN_STATE_RECEIVE:
         ESP_LOGI(TAG, "IR Learn receive step: %d", sub_step);
         break;
+    case IR_LEARN_STEP_READY:
+        ESP_LOGI(TAG, "IR Learn step ready: %d", sub_step);
+        light_flag = true; // Turn on light for each step
+        break;
+    case IR_LEARN_STEP_FAIL:
+        ESP_LOGE(TAG, "IR Learn step failed: %d", sub_step);
+        light_flag = false;
+        break;
+    case IR_LEARN_STEP_END:
+        ESP_LOGI(TAG, "IR Learn step end: %d", sub_step);
+        light_flag = false; // Turn off light after step end
+        break;
+    case IR_LEARN_STATE_STEP:
     default:
         ESP_LOGI(TAG, "IR Learn step:[%d][%d]", state, sub_step);
         break;

@@ -18,7 +18,7 @@
 extern QueueHandle_t ir_learn_queue;
 extern QueueHandle_t ir_trans_queue;
 extern ir_learn_common_param_t *learn_param; // Pointer to the IR learn parameters
-extern device_state_t g_device_state; // Global device state
+extern device_state_t g_device_state;        // Global device state
 extern bool light_flag;
 
 static const char *TAG = "IR_CMD";
@@ -48,11 +48,29 @@ static int ir_learn_cmd(int argc, char **argv)
     }
 
     ir_event_cmd_t IR_cmd = {
-        .event = IR_EVENT_LEARN,
+        .event = IR_EVENT_LEARN_NORMAL,
     };
     strncpy(IR_cmd.key, ir_key_args.key->sval[0], sizeof(IR_cmd.key));
     xQueueSend(ir_learn_queue, &IR_cmd, portMAX_DELAY);
     ESP_LOGI(TAG, "IR learn command for key: %s", ir_key_args.key->sval[0]);
+
+    return 0;
+}
+static int ir_learn_step_cmd(int argc, char **argv)
+{
+    int nerrors = arg_parse(argc, argv, (void **)&ir_key_args);
+    if (nerrors != 0)
+    {
+        arg_print_errors(stderr, ir_key_args.end, argv[0]);
+        return 1;
+    }
+
+    ir_event_cmd_t IR_cmd = {
+        .event = IR_EVENT_LEARN_STEP,
+    };
+    strncpy(IR_cmd.key_name_step, ir_key_args.key->sval[0], sizeof(IR_cmd.key_name_step));
+    xQueueSend(ir_learn_queue, &IR_cmd, portMAX_DELAY);
+    ESP_LOGI(TAG, "IR learn step with name: %s", ir_key_args.key->sval[0]);
 
     return 0;
 }
@@ -151,10 +169,10 @@ static int ir_device_state_cmd(int argc, char **argv)
              toggle_power_to_str(g_device_state.ac.power_on), g_device_state.ac.temperature,
              ir_mode_to_str(g_device_state.ac.mode), ir_fan_to_str(g_device_state.ac.speed));
     ESP_LOGI(TAG, "Fan power: %s, speed: %s, oscillation: %d",
-        toggle_power_to_str(g_device_state.fan.power_on), ir_fan_to_str(g_device_state.fan.speed),
+             toggle_power_to_str(g_device_state.fan.power_on), ir_fan_to_str(g_device_state.fan.speed),
              g_device_state.fan.oscillation);
     ESP_LOGI(TAG, "Light power: %s",
-        toggle_power_to_str(g_device_state.light.power_on));
+             toggle_power_to_str(g_device_state.light.power_on));
 
     return 0;
 }
@@ -212,7 +230,7 @@ void register_ir_format_spiffs_commands(void)
 
     ESP_ERROR_CHECK(esp_console_cmd_register(&reset_cmd));
 }
-void resister_ir_delete_commands(void)
+void register_ir_delete_commands(void)
 {
     ir_key_args.key = arg_str1(NULL, NULL, "<Name for ir key to delete>", "Input name for ir key to delete");
     ir_key_args.end = arg_end(1);
@@ -239,6 +257,20 @@ void register_ir_learn_commands(void)
         .argtable = &ir_key_args};
 
     ESP_ERROR_CHECK(esp_console_cmd_register(&learn_cmd));
+}
+void register_ir_learn_step_commands(void)
+{
+    ir_key_args.key = arg_str1(NULL, NULL, "<Name for ir learn step>", "Input name for ir learn step command");
+    ir_key_args.end = arg_end(1);
+    /* Register custom commands here */
+    esp_console_cmd_t learn_step_cmd = {
+        .command = "learn_step",
+        .help = "Set name for IR learn step command",
+        .hint = NULL,
+        .func = &ir_learn_step_cmd,
+        .argtable = &ir_key_args};
+
+    ESP_ERROR_CHECK(esp_console_cmd_register(&learn_step_cmd));
 }
 void register_ir_trans_commands(void)
 {

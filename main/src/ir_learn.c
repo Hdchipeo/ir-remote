@@ -456,6 +456,108 @@ esp_err_t send_data_to_ir_app(ir_learn_common_param_t *learn_param, ir_event_cmd
 
     return ESP_OK;
 }
+static void ir_learn_normal(ir_learn_common_param_t *learn_param, ir_event_cmd_t ir_event)
+{
+    ESP_LOGI(TAG, "Start learning IR cmd for key: %s", ir_event.key);
+
+    if (learn_param->user_cb)
+    {
+        learn_param->user_cb(IR_LEARN_STATE_READY, 0, NULL);
+    }
+
+    ir_learn_start(learn_param->ctx);
+
+    ESP_ERROR_CHECK(rmt_receive(rx_channel_handle,
+                                learn_param->ctx->rmt_rx.received_symbols,
+                                learn_param->ctx->rmt_rx.num_symbols,
+                                &ir_learn_rmt_rx_cfg));
+
+    esp_err_t ret = ir_learn_active_receive_loop(learn_param);
+    if (ret == ESP_OK)
+    {
+        ESP_LOGI(TAG, "Learning completed successfully with %d commands",
+                 learn_param->ctx->learned_count);
+        if (learn_param->user_cb)
+        {
+            learn_param->user_cb(IR_LEARN_STATE_END, 0, &learn_param->ctx->learn_result);
+        }
+        ir_event.event = IR_EVENT_LEARN_DONE;
+        ir_event.data = &learn_param->ctx->learn_result;
+        send_data_to_ir_app(learn_param, &ir_event);
+    }
+    else
+    {
+        ESP_LOGE(TAG, "Learning failed, invalid data");
+        if (learn_param->user_cb)
+        {
+            learn_param->user_cb(IR_LEARN_STATE_FAIL, 0, NULL);
+        }
+    }
+
+    ir_learn_pause(learn_param->ctx);
+}
+static void ir_learn_step(ir_learn_common_param_t *learn_param, ir_event_cmd_t ir_event)
+{
+    char step[IR_KEY_MAX_LEN] = "step";
+    static int count = 1;
+
+    if (learn_param->user_cb)
+    {
+        learn_param->user_cb(IR_LEARN_STEP_READY, 0, NULL);
+    }
+
+    ir_learn_start(learn_param->ctx);
+
+    while (1)
+    {
+        ESP_LOGI(TAG, "Learning step %d for key: %s", count, ir_event.key_name_step);
+
+        ir_learn_start(learn_param->ctx);
+
+        ESP_ERROR_CHECK(rmt_receive(rx_channel_handle,
+                                    learn_param->ctx->rmt_rx.received_symbols,
+                                    learn_param->ctx->rmt_rx.num_symbols,
+                                    &ir_learn_rmt_rx_cfg));
+
+        esp_err_t ret = ir_learn_active_receive_loop(learn_param);
+        if (ret == ESP_OK)
+        {
+            if (learn_param->user_cb)
+            {
+                learn_param->user_cb(IR_LEARN_STEP_END, 0, &learn_param->ctx->learn_result);
+            }
+            snprintf(step, IR_KEY_MAX_LEN, "step_%d", count++);
+            strncpy(ir_event.key, step, sizeof(ir_event.key));
+            ir_event.event = IR_EVENT_LEARN_DONE;
+            ir_event.data = &learn_param->ctx->learn_result;
+            send_data_to_ir_app(learn_param, &ir_event);
+        }
+        else
+        {
+            ESP_LOGE(TAG, "Learning failed, invalid data");
+            if (learn_param->user_cb)
+            {
+                learn_param->user_cb(IR_LEARN_STEP_FAIL, 0, NULL);
+            }
+        }
+
+        if (count > IR_STEP_COUNT_MAX)
+        {
+            if (learn_param->user_cb)
+            {
+                learn_param->user_cb(IR_LEARN_STEP_END, 0, &learn_param->ctx->learn_result);
+            }
+            ESP_LOGI(TAG, "Reached maximum learn steps: %d", IR_STEP_COUNT_MAX);
+            count = 1; // Reset count for next learning session
+             ir_learn_pause(learn_param->ctx);
+            break;
+        }
+
+        ir_learn_pause(learn_param->ctx);
+
+        vTaskDelay(pdMS_TO_TICKS(50)); // Delay before next step
+    }
+}
 
 static void ir_learn_task(void *arg)
 {
@@ -468,54 +570,29 @@ static void ir_learn_task(void *arg)
     learn_param = (ir_learn_common_param_t *)arg;
     ir_event_cmd_t ir_event;
 
-    ir_learn_restart(learn_param->ctx);
+    ir_learn_start(learn_param->ctx);
 
     while (1)
     {
         if (xQueueReceive(ir_learn_queue, &ir_event, portMAX_DELAY) == pdTRUE)
         {
-            if (ir_event.event == IR_EVENT_LEARN)
+
+            switch (ir_event.event)
             {
-                ESP_LOGI(TAG, "Start learning IR cmd for key: %s", ir_event.key);
-
-                if (learn_param->user_cb)
-                {
-                    learn_param->user_cb(IR_LEARN_STATE_READY, 0, NULL);
-                }
-                ir_learn_start(learn_param->ctx);
-
-                ESP_ERROR_CHECK(rmt_receive(rx_channel_handle,
-                                            learn_param->ctx->rmt_rx.received_symbols,
-                                            learn_param->ctx->rmt_rx.num_symbols,
-                                            &ir_learn_rmt_rx_cfg));
-
-                esp_err_t ret = ir_learn_active_receive_loop(learn_param);
-                if (ret == ESP_OK)
-                {
-                    ESP_LOGI(TAG, "Learning completed successfully with %d commands",
-                             learn_param->ctx->learned_count);
-                    if (learn_param->user_cb)
-                    {
-                        learn_param->user_cb(IR_LEARN_STATE_END, 0, &learn_param->ctx->learn_result);
-                    }
-                    ir_event.event = IR_EVENT_LEARN_DONE;
-                    ir_event.data = &learn_param->ctx->learn_result;
-                    send_data_to_ir_app(learn_param, &ir_event);
-                }
-                else
-                {
-                    ESP_LOGE(TAG, "Learning failed, invalid data");
-                    if (learn_param->user_cb)
-                    {
-                        learn_param->user_cb(IR_LEARN_STATE_FAIL, 0, NULL);
-                    }
-                }
-                ir_learn_pause(learn_param->ctx);
+            case IR_EVENT_LEARN_NORMAL:
+                ir_learn_normal(learn_param, ir_event);
+                break;
+            case IR_EVENT_LEARN_STEP:
+                ir_learn_step(learn_param, ir_event);
+                break;
+            default:
+                ESP_LOGW(TAG, "Unknown IR event: %d", ir_event.event);
+                break;
             }
         }
-    }
 
-    vTaskDelete(NULL);
+        vTaskDelete(NULL);
+    }
 }
 
 esp_err_t ir_learn_add_sub_list_node(struct ir_learn_sub_list_head *sub_head, uint32_t timediff, const rmt_rx_done_event_data_t *symbol)

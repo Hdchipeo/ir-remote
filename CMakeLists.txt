@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.16)
 
 set(PROJECT_VER "1.0")
 
-set(EXTRA_COMPONENT_DIRS "/Users/dangminhtam/esp/esp-idf/components/esp-iot-solution/components/button")
+set(EXTRA_COMPONENT_DIRS "D:/esp/esp-iot-solution/components/button")
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 project(ir-learn)

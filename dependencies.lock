@@ -158,37 +158,21 @@ dependencies:
       registry_url: https://components.espressif.com
       type: service
     version: 1.0.5
-  espressif/qrcode:
-    component_hash: 3b493771bc5d6ad30cbf87c25bf784aada8a08c941504355b55d6b75518ed7bc
-    dependencies: []
-    source:
-      registry_url: https://components.espressif.com/
-      type: service
-    version: 0.1.0~2
   espressif/rmaker_common:
-    component_hash: f1208cd1951f9308fd838d7af12de3522206cc77079f268629cd74bf9c6daea7
+    component_hash: f8e531264d62cf01ea1bcc80d7436e09e5819132056ca22c3869f5b0e2000c13
     dependencies: []
     source:
       registry_url: https://components.espressif.com
       type: service
-    version: 1.4.11
+    version: 1.4.12
   idf:
     source:
       type: idf
-    version: 5.3.1
-  ota:
-    dependencies:
-    - name: espressif/qrcode
-      version: '*'
-    source:
-      path: /Users/dangminhtam/esp/esp-idf/components/my-component/ota
-      type: local
-    version: '*'
+    version: 5.4.1
 direct_dependencies:
 - espressif/cmake_utilities
 - espressif/esp_rainmaker
 - idf
-- ota
-manifest_hash: 5aab769d6c3587d9a5dd1da73e0d96b922ef35c6ea7726fd132284d21db8dd19
+manifest_hash: 63456312eb71a71605d49843a06c3d01893253546aa0855d899a185653e73af2
 target: esp32
 version: 2.0.0

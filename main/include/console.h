@@ -30,7 +30,7 @@ void register_ir_list_commands(void);
 /**
  * @brief Register command to delete an IR key.
  */
-void resister_ir_delete_commands(void);  
+void register_ir_delete_commands(void);  
 
 /**
  * @brief Register command to format SPIFFS storage.
@@ -51,6 +51,10 @@ void register_ir_rename_commands(void);
  * @brief Register commands to manage IR device states.
  */
 void register_ir_device_state_commands(void);
+/**
+ * @brief Register command to handle IR learn steps.
+ */
+void register_ir_learn_step_commands(void);
 
 #ifdef __cplusplus
 }

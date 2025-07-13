@@ -32,12 +32,14 @@ void app_console_start()
     register_ir_trans_commands();
     register_ir_learn_commands();
     register_ir_list_commands();
-    resister_ir_delete_commands();
+    register_ir_delete_commands();
     register_ir_format_spiffs_commands();
     register_ir_input_name_commands();
     register_ir_rename_commands();
     register_ir_device_state_commands();
+    register_ir_learn_step_commands();
     ESP_LOGI(TAG, "Registering IR commands");
+
 
 #if defined(CONFIG_ESP_CONSOLE_UART_DEFAULT) || defined(CONFIG_ESP_CONSOLE_UART_CUSTOM)
     esp_console_dev_uart_config_t hw_config = ESP_CONSOLE_DEV_UART_CONFIG_DEFAULT();

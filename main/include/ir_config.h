@@ -47,6 +47,8 @@ extern "C" {
  */
 #define IR_LEARN_COUNT 1
 
+#define IR_STEP_COUNT_MAX 3
+
 /**
  * @brief Starts the IR learning task and initializes NVS and RMT peripherals.
  * 

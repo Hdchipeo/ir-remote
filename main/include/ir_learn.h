@@ -41,13 +41,17 @@ extern "C"
         IR_LEARN_STATE_END,        /**< IR learn successfully */
         IR_LEARN_STATE_FAIL,       /**< IR learn failure */
         IR_LEARN_STATE_EXIT,
-        IR_LEARN_STATE_RECEIVE       /**< IR learn exit */
+        IR_LEARN_STATE_RECEIVE,
+        IR_LEARN_STEP_READY,
+        IR_LEARN_STEP_FAIL,
+        IR_LEARN_STEP_END /**< IR learn end */
     } ir_learn_state_t;
 
     typedef enum
     {
         IR_EVENT_NONE,
-        IR_EVENT_LEARN,
+        IR_EVENT_LEARN_NORMAL,
+        IR_EVENT_LEARN_STEP,
         IR_EVENT_LEARN_DONE,
         IR_EVENT_RECEIVE,
         IR_EVENT_RECEIVE_DONE,
@@ -64,6 +68,7 @@ extern "C"
     {
         ir_event_t event;
         char key[IR_KEY_MAX_LEN]; /*!< Key name for IR command */
+        char key_name_step[IR_KEY_MAX_LEN]; /*!< Key name for IR learn step */
         struct ir_learn_sub_list_head *data;
     } ir_event_cmd_t;
 
