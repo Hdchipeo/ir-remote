@@ -41,17 +41,22 @@ extern "C"
         IR_LEARN_STATE_END,        /**< IR learn successfully */
         IR_LEARN_STATE_FAIL,       /**< IR learn failure */
         IR_LEARN_STATE_EXIT,
-        IR_LEARN_STATE_RECEIVE       /**< IR learn exit */
+        IR_LEARN_STATE_RECEIVE,
+        IR_LEARN_STEP_READY,
+        IR_LEARN_STEP_FAIL,
+        IR_LEARN_STEP_END /**< IR learn end */
     } ir_learn_state_t;
 
     typedef enum
     {
         IR_EVENT_NONE,
-        IR_EVENT_LEARN,
+        IR_EVENT_LEARN_NORMAL,
+        IR_EVENT_LEARN_STEP,
         IR_EVENT_LEARN_DONE,
         IR_EVENT_RECEIVE,
         IR_EVENT_RECEIVE_DONE,
         IR_EVENT_TRANSMIT,
+        IR_EVENT_SEND_STEP,
         IR_EVENT_SET_NAME,
         IR_EVENT_RESET,
         IR_EVENT_EXIT
@@ -64,6 +69,7 @@ extern "C"
     {
         ir_event_t event;
         char key[IR_KEY_MAX_LEN]; /*!< Key name for IR command */
+        char key_name_step[IR_KEY_MAX_LEN]; /*!< Key name for IR learn step */
         struct ir_learn_sub_list_head *data;
     } ir_event_cmd_t;
 
@@ -73,7 +79,7 @@ extern "C"
      */
     struct ir_learn_sub_list_t
     {
-        uint32_t timediff;                /*!< The interval time from the previous packet (ms) */
+        uint32_t timediff;
         rmt_rx_done_event_data_t symbols; /*!< Received RMT symbols */
         SLIST_ENTRY(ir_learn_sub_list_t)
         next; /*!< Pointer to the next packet */
@@ -152,7 +158,6 @@ extern "C"
         QueueHandle_t receive_queue; /*!< A queue used to send the raw data to the task from the ISR */
         bool running;
         uint32_t pre_time;
-
         uint8_t learn_count;
         uint8_t learned_count;
         uint8_t learned_sub;

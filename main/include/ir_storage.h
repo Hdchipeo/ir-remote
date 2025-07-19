@@ -84,6 +84,33 @@ esp_err_t load_device_state_from_nvs(device_state_t *state);
  */
 bool match_ir_from_spiffs(const struct ir_learn_sub_list_head *data_learn, char *matched_key_out);
 
+/**
+ * @brief Save step timediff data to a file.
+ * 
+ * @param key_name Key name for the file (without ".timediff" extension)
+ * @param timediff_list Pointer to the list of timediffs
+ * @param count Number of timediffs in the list
+ * @return ESP_OK on success, or appropriate error code
+ */
+esp_err_t save_step_timediff_to_file(const char *key_name, const float *timediff_list, size_t count);
+
+/**
+ * @brief Load step timediff data from a file.
+ * 
+ * @param key_name Key name for the file (without ".timediff" extension)
+ * @param timediff_list Pointer to the buffer to fill with loaded timediffs
+ * @param count_out Pointer to store the number of timediffs loaded
+ * @return ESP_OK on success, or appropriate error code
+ */
+esp_err_t load_step_timediff_from_file(const char *key_name, float *timediff_list, size_t *count_out);
+
+/**
+ * @brief List all IR step delay files in SPIFFS.
+ * 
+ * This function lists all files with the ".timediff" extension in the SPIFFS partition.
+ */
+void list_ir_step_delay_from_spiffs(void);
+
 #ifdef __cplusplus
 }
 #endif

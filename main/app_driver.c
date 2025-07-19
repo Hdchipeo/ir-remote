@@ -32,7 +32,7 @@ static void button_event_cb(void *arg, void *data)
     if (BUTTON_LONG_PRESS_START == button_event)
     {
         ir_event = (ir_event_cmd_t){
-            .event = IR_EVENT_LEARN,
+            .event = IR_EVENT_LEARN_NORMAL,
             .key = "unknow" // Key for the button event
         };
         xQueueSend(ir_learn_queue, &ir_event, portMAX_DELAY);

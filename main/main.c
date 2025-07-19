@@ -5,6 +5,7 @@
 #include "ir_config.h" 
 #include "driver_config.h"
 #include "espnow_config.h"
+#include "web_server.h"
 #include "console.h"
 #include "ota.h"
 
@@ -15,6 +16,7 @@ void app_main(void)
 {
     app_ota_start(); // Start the OTA application
     app_espnow_start(); // Start the ESPNOW application
+    app_web_server_start(); // Start the web server for remote control
     ir_task_start(); // Start the IR task
     app_driver_init(); // Initialize device components
     app_console_start(); // Start the console for user interaction

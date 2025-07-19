@@ -45,7 +45,9 @@ extern "C" {
 /**
  * @brief Number of times to learn the IR signal before saving.
  */
-#define IR_LEARN_COUNT 4
+#define IR_LEARN_COUNT 1
+
+#define IR_STEP_COUNT_MAX 3
 
 /**
  * @brief Starts the IR learning task and initializes NVS and RMT peripherals.
@@ -57,6 +59,8 @@ esp_err_t ir_task_start(void);
 struct ir_learn_sub_list_head;
 
 void ir_send_raw(struct ir_learn_sub_list_head *rmt_out);
+
+void ir_send_step(const char *key_name);
 
 #ifdef __cplusplus
 }

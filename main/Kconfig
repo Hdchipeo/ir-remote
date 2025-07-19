@@ -3,28 +3,28 @@ menu "IR App Configuration"
 
     config LIGHT_STATE_GPIO
         int "GPIO for Light State"
-        default 18
+        default 2
         range 0 39
         help
             Set the GPIO number used to indicate light state (default: GPIO18)
 
     config BUTTON_GPIO
         int "GPIO for Button"
-        default 15
+        default 0
         range 0 39
         help
             Set the GPIO number used for the button (default: GPIO15)
 
     config IR_TX_GPIO
         int "GPIO for IR TX"
-        default 5
+        default 12
         range 0 39
         help
             Set the GPIO number used for IR transmission (default: GPIO5)
 
     config IR_RX_GPIO
         int "GPIO for IR RX"
-        default 4
+        default 13
         range 0 39
         help
             Set the GPIO number used for IR reception (default: GPIO4)
@@ -105,4 +105,14 @@ menu "Espnow config"
         help
             ESPNOW wake interval
 
+endmenu
+
+menu "Werserver config"
+
+    config HOST_NAME_WEB_SERVER
+        string "Host name for web server"
+        default "vm04"
+        help
+            Set the host name for the web server. This will be used in the URL to access the web server.
+    
 endmenu

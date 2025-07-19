@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IR Remote Control</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+    <!-- Tab: Điều khiển -->
+    <div class="tab-content active" id="control">
+        <h2>Bảng điều khiển</h2>
+        <div class="toggle-section">
+            <button class="btn" onclick="sendIR('toggle')">LIGHT</button>
+            <button class="btn" onclick="whiteScreen()">White screen</button>
+            <button class="btn" onclick="resetScreen()">Reset screen</button>
+        </div>
+
+        <div class="control-grid">
+            <div class="arrow-row center"><button onclick="sendIR('up')">↑</button></div>
+            <div class="arrow-row">
+                <button onclick="sendIR('left')">←</button>
+                <button onclick="sendIR('ok')">OK</button>
+                <button onclick="sendIR('right')">→</button>
+            </div>
+            <div class="arrow-row center"><button onclick="sendIR('down')">↓</button></div>
+            <div class="arrow-row center"><button onclick="sendIR('exit')">Exit</button></div>
+        </div>
+
+        <div id="customButtons"></div>
+    </div>
+
+    <!-- Tab: Học lệnh -->
+    <div class="tab-content" id="learn">
+        <h2>Học lệnh IR </h2>
+        <div class="button-list">
+            <button onclick="learnCommand('single')">Học lệnh đơn</button>
+            <button onclick="learnCommand('step')">Học lệnh theo bước</button>
+        </div>
+        <h3 style="text-align:center; margin-top: 40px;">Học lệnh mặc định</h3>
+        <div class="button-list">
+            <button onclick="learnDefault('toggle')">LIGHT</button>
+            <button onclick="learnDefault('up')">Học lệnh ↑</button>
+            <button onclick="learnDefault('down')">Học lệnh ↓</button>
+            <button onclick="learnDefault('left')">Học lệnh ←</button>
+            <button onclick="learnDefault('right')">Học lệnh →</button>
+            <button onclick="learnDefault('ok')">Học lệnh OK</button>
+            <button onclick="learnDefault('exit')">Học lệnh Exit</button>
+        </div>
+    </div>
+
+    <!-- Tab: Danh sách lệnh -->
+    <div class="tab-content" id="list">
+        <h2>Danh sách lệnh IR</h2>
+        <ul id="commandList"></ul>
+    </div>
+
+    <!-- Tab: Firmware Update -->
+    <div class="tab-content" id="update">
+        <h2>Firmware Update</h2>
+        <div class="update-section">
+            <p id="fwStatus">Kiểm tra cập nhật...</p>
+            <button onclick="updateFirmware()">Cập nhật</button>
+        </div>
+    </div>
+
+    <!-- Bottom Tab Bar -->
+    <div class="tab-bar">
+        <button onclick="showTab('control')">Điều khiển</button>
+        <button onclick="showTab('learn')">Học lệnh</button>
+        <button onclick="showTab('list')">Danh sách</button>
+        <button onclick="showTab('update')">Cập nhật</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

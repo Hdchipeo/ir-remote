@@ -187,9 +187,48 @@ void ir_send_raw(struct ir_learn_sub_list_head *rmt_out)
         rmt_symbol_word_t *rmt_symbols = sub_it->symbols.received_symbols;
         size_t symbol_num = sub_it->symbols.num_symbols;
 
-        ESP_ERROR_CHECK(rmt_transmit(tx_channel, raw_encoder, rmt_symbols, symbol_num, &transmit_cfg));
+        if (!rmt_symbols || symbol_num == 0)
+        {
+            ESP_LOGW(TAG, "Empty IR data, skipping one sub command.");
+            continue;
+        }
+
+        esp_err_t err = rmt_transmit(tx_channel, raw_encoder, rmt_symbols, symbol_num, &transmit_cfg);
+        if (err != ESP_OK)
+        {
+            ESP_LOGE(TAG, "rmt_transmit failed: %s", esp_err_to_name(err));
+            continue;
+        }
         rmt_tx_wait_all_done(tx_channel, -1);
     }
     rmt_tx_stop();
     ESP_LOGI(TAG, "IR transmission completed");
+}
+
+void ir_send_step(const char *key_name)
+{
+    struct ir_learn_sub_list_head load_data;
+    float loaded_list[IR_STEP_COUNT_MAX] = {0};
+    char key_name_load[IR_KEY_MAX_LEN] = {0};
+    size_t count = 0;
+    load_step_timediff_from_file(key_name, loaded_list, &count);
+    if (count == 0)
+    {
+        ESP_LOGW(TAG, "No delay data found for key: %s", key_name);
+        return;
+    }
+
+    for (size_t i = 0; i < count; i++)
+    {
+        snprintf(key_name_load, IR_KEY_MAX_LEN, "%s_step_%d", key_name, i + 1);
+        esp_err_t ret = ir_learn_load(&load_data, key_name_load);
+        if (ret != ESP_OK) {
+            ESP_LOGE(TAG, "Failed to load IR data from: %s", key_name_load);
+            continue;
+        }
+        ir_send_raw(&load_data);
+        ESP_LOGI(TAG, "Sent step %d for key: %s", i + 1, key_name_load);
+        vTaskDelay(pdMS_TO_TICKS(loaded_list[i] * 1000));
+    }
+    ESP_LOGI(TAG, "All steps sent for key: %s", key_name);
 }

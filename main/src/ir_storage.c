@@ -74,7 +74,6 @@ static esp_err_t load_ir_list_from_file(const char *key, struct ir_learn_sub_lis
         size_t read_count = fread(&timediff, sizeof(uint32_t), 1, f);
         if (read_count != 1)
             break; // End of file or read error
-        
 
         read_count = fread(&num_symbols, sizeof(uint32_t), 1, f);
         if (read_count != 1)
@@ -107,7 +106,6 @@ static esp_err_t load_ir_list_from_file(const char *key, struct ir_learn_sub_lis
         };
 
         ir_learn_add_sub_list_node(out_list, timediff, &symbol_data);
-        
     }
 
     fclose(f);
@@ -167,6 +165,39 @@ void list_ir_keys_from_spiffs(void)
 
     closedir(dir);
     ESP_LOGI("SPIFFS", "Total IR keys found: %d", count);
+}
+void list_ir_step_delay_from_spiffs(void)
+{
+    const char *dir_path = "/spiffs";
+    DIR *dir = opendir(dir_path);
+    if (!dir)
+    {
+        ESP_LOGE("SPIFFS", "Failed to open %s", dir_path);
+        return;
+    }
+
+    struct dirent *entry;
+    int count = 0;
+
+    while ((entry = readdir(dir)) != NULL)
+    {
+        if (entry->d_type == DT_REG)
+        {
+            const char *filename = entry->d_name;
+            const char *ext = strrchr(filename, '.');
+
+            if (ext && strcmp(ext, ".delay") == 0)
+            {
+                count++;
+                char key[32] = {0};
+                strncpy(key, filename, ext - filename);
+                ESP_LOGI("SPIFFS", "IR Step Delay Key: %s", key);
+            }
+        }
+    }
+
+    closedir(dir);
+    ESP_LOGI("SPIFFS", "Total IR step delay keys found: %d", count);
 }
 esp_err_t rename_ir_key_in_spiffs(const char *old_key, const char *new_key)
 {
@@ -323,4 +354,54 @@ esp_err_t load_device_state_from_nvs(device_state_t *state)
 
     nvs_close(nvs_handle);
     return err;
+}
+esp_err_t save_step_timediff_to_file(const char *key_name, const float *timediff_list, size_t count)
+{
+    if (!key_name || !timediff_list || count == 0 || count > IR_STEP_COUNT_MAX) {
+        ESP_LOGE(TAG, "Invalid arguments to save_step_timediff_to_file");
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    char filepath[64];
+    snprintf(filepath, sizeof(filepath), "/spiffs/%s.delay", key_name);
+
+    FILE *f = fopen(filepath, "w");
+    if (!f) {
+        ESP_LOGE(TAG, "Failed to open file for writing: %s", filepath);
+        return ESP_FAIL;
+    }
+
+    for (size_t i = 0; i < count; i++) {
+        fprintf(f, "%.3f\n", timediff_list[i]); // mỗi dòng là một thời gian delay
+    }
+
+    fclose(f);
+    ESP_LOGI(TAG, "Saved %d step delays to file: %s", count, filepath);
+    return ESP_OK;
+}
+esp_err_t load_step_timediff_from_file(const char *key_name, float *timediff_list, size_t *count_out)
+{
+    if (!key_name || !timediff_list || !count_out) {
+        ESP_LOGE(TAG, "Invalid arguments to load_step_timediff_from_file");
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    char filepath[64];
+    snprintf(filepath, sizeof(filepath), "/spiffs/%s.delay", key_name);
+
+    FILE *f = fopen(filepath, "r");
+    if (!f) {
+        ESP_LOGE(TAG, "Failed to open file for reading: %s", filepath);
+        return ESP_FAIL;
+    }
+
+    size_t count = 0;
+    while (fscanf(f, "%f", &timediff_list[count]) == 1 && count < IR_STEP_COUNT_MAX) {
+        count++;
+    }
+
+    fclose(f);
+    *count_out = count;
+    ESP_LOGI(TAG, "Loaded %d step delays from file: %s", count, filepath);
+    return ESP_OK;
 }

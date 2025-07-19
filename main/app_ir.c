@@ -63,9 +63,21 @@ static void ir_send_cb(ir_learn_state_t state, uint8_t sub_step, struct ir_learn
     case IR_LEARN_STATE_RECEIVE:
         ESP_LOGI(TAG, "IR Learn receive step: %d", sub_step);
         break;
+    case IR_LEARN_STEP_READY:
+        ESP_LOGI(TAG, "IR Learn step ready");
+        light_flag = true; // Turn on light for each step
+        break;
+    case IR_LEARN_STEP_FAIL:
+        ESP_LOGE(TAG, "IR Learn step failed: %d", sub_step);
+        light_flag = false;
+        break;
+    case IR_LEARN_STEP_END:
+        // ESP_LOGI(TAG, "IR Learn step end: %d", sub_step);
+        light_flag = false; // Turn off light after step end
+        break;
     case IR_LEARN_STATE_STEP:
     default:
-        ESP_LOGI(TAG, "IR Learn step:[%d][%d]", state, sub_step);
+        // ESP_LOGI(TAG, "IR Learn step:[%d][%d]", state, sub_step);
         break;
     }
     return;
@@ -93,6 +105,24 @@ static void ir_learn_tx_task(void *arg)
                 update_device_state_from_key(&g_device_state, ir_event.key);
                 ir_learn_clean_sub_data(&ir_data);
                 ir_rx_restart(learn_param);
+                break;
+            case IR_EVENT_SEND_STEP:
+                ESP_LOGI(TAG, "IR send step command for key: %s", ir_event.key_name_step);
+                float loaded_list[IR_STEP_COUNT_MAX] = {0};
+                char key_name_load[IR_KEY_MAX_LEN] = {0};
+                size_t count = 0;
+                load_step_timediff_from_file(ir_event.key_name_step, loaded_list, &count);
+
+                for(size_t i = 0; i <= count; i++)
+                {
+                    snprintf(key_name_load, IR_KEY_MAX_LEN, "%s/step_%d", ir_event.key_name_step, i + 1);
+                    ESP_LOGI(TAG, "Loading step: %s", key_name_load);
+                    ir_learn_load(&ir_data, key_name_load);
+                    ir_send_raw(&ir_data);
+                    ir_learn_clean_sub_data(&ir_data);
+                    vTaskDelay(pdMS_TO_TICKS(loaded_list[i] * 1000)); // Delay for the step duration
+                }
+                ESP_LOGI(TAG, "IR send step command completed for key: %s", ir_event.key_name_step);
                 break;
             case IR_EVENT_LEARN_DONE:
                 ir_learn_save(&ir_data, ir_event.data, ir_event.key);
