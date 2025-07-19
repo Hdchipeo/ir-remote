@@ -27,7 +27,7 @@ dependencies:
       type: service
     version: 1.8.0
   espressif/esp_rainmaker:
-    component_hash: c2eda1967c6fd689b3cd669a6f25321692a6ea1defb66f99a8cd7422f9cc572c
+    component_hash: 88f6e5011f7a5e5ae585aded0fd43fdd11c3677ca2d3fc3c61ba063fcebd7384
     dependencies:
     - name: espressif/esp_rcp_update
       registry_url: https://components.espressif.com
@@ -68,11 +68,11 @@ dependencies:
     - name: espressif/rmaker_common
       registry_url: https://components.espressif.com
       require: private
-      version: ~1.4.10
+      version: ~1.4.12
     source:
       registry_url: https://components.espressif.com/
       type: service
-    version: 1.6.0
+    version: 1.6.1
   espressif/esp_rcp_update:
     component_hash: 0629efd75df671b132cc3b3d66e37267d12da63ea734f820280431e4d805ab0b
     dependencies:
@@ -158,13 +158,6 @@ dependencies:
       registry_url: https://components.espressif.com
       type: service
     version: 1.0.5
-  espressif/qrcode:
-    component_hash: 3b493771bc5d6ad30cbf87c25bf784aada8a08c941504355b55d6b75518ed7bc
-    dependencies: []
-    source:
-      registry_url: https://components.espressif.com/
-      type: service
-    version: 0.1.0~2
   espressif/rmaker_common:
     component_hash: f8e531264d62cf01ea1bcc80d7436e09e5819132056ca22c3869f5b0e2000c13
     dependencies: []
@@ -175,22 +168,11 @@ dependencies:
   idf:
     source:
       type: idf
-    version: 5.3.1
-  ota:
-    dependencies:
-    - name: espressif/qrcode
-      version: '*'
-    - name: espressif/esp_rainmaker
-      version: '>=1.0'
-    source:
-      path: /Users/dangminhtam/esp/esp-idf/components/my-component/ota
-      type: local
-    version: '*'
+    version: 5.4.1
 direct_dependencies:
 - espressif/cmake_utilities
 - espressif/esp_rainmaker
 - idf
-- ota
-manifest_hash: 5aab769d6c3587d9a5dd1da73e0d96b922ef35c6ea7726fd132284d21db8dd19
+manifest_hash: 63456312eb71a71605d49843a06c3d01893253546aa0855d899a185653e73af2
 target: esp32
 version: 2.0.0

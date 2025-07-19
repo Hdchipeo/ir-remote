@@ -19,9 +19,9 @@ function showTab(tabId) {
 }
 
 function learnDefault(commandName) {
-    if (confirm(`Bạn chắc chắn muốn học lệnh cho nút "${commandName}"?`)) {
+    if (confirm(`Reset và học lệnh cho nút "${commandName}"?`)) {
         // Gửi lệnh học với key là tên nút mặc định
-        learnCommandWithKey('default', commandName);
+        learnCommandWithKey('single', commandName);
     }
 }
 

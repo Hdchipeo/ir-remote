@@ -2100,6 +2100,12 @@ CONFIG_ESPNOW_LMK="lmk1234567890123"
 # end of Espnow config
 
 #
+# Werserver config
+#
+CONFIG_HOST_NAME_WEB_SERVER="vm04"
+# end of Werserver config
+
+#
 # IoT Button
 #
 CONFIG_BUTTON_PERIOD_TIME_MS=5

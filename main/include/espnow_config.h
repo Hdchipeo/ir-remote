@@ -5,6 +5,7 @@
 #define ESPNOW_QUEUE_SIZE           6
 
 #define ESPNOW_WIFI_IF   ESP_IF_WIFI_STA
+#define ESPNOW_WIFI_MODE WIFI_MODE_AP
 
 #define IS_BROADCAST_ADDR(addr) (memcmp(addr, broadcast_mac, ESP_NOW_ETH_ALEN) == 0)
 
@@ -66,3 +67,4 @@ typedef struct {
 
 void app_espnow_start(void);
 void app_espnow_stop(void);
+void app_wifi_init(void);

@@ -55,6 +55,23 @@ endmenu
 
 menu "Espnow config"
 
+
+    config ESP_WIFI_SSID
+        string "Wi-Fi SSID"
+        default "VM04 IR Remote"
+        help
+            Set the SSID for the Wi-Fi network used by the application.
+    config ESP_WIFI_PASS
+        string "Wi-Fi Password"
+        default "sehc@2025"
+        help
+            Set the password for the Wi-Fi network used by the application.
+    config MAX_STA_CONN
+        int "Max Station Connections" 
+        default 4
+        range 1 10
+        help
+            Set the maximum number of station connections allowed (default: 4)  
     config ESPNOW_CHANNEL
         int "Channel"
         default 9
@@ -115,4 +132,14 @@ menu "Werserver config"
         help
             Set the host name for the web server. This will be used in the URL to access the web server.
     
+endmenu
+
+menu "OTA config"
+
+    config OTA_ENABLED
+        bool "Enable OTA"
+        default "n"
+        help
+            Enable Over-The-Air (OTA) updates for the application.
+
 endmenu

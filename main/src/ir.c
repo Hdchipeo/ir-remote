@@ -232,3 +232,31 @@ void ir_send_step(const char *key_name)
     }
     ESP_LOGI(TAG, "All steps sent for key: %s", key_name);
 }
+
+void ir_send_command(const char *key_name)
+{
+    //ir_send_step(key_name);
+    ESP_LOGI(TAG, "IR command sent for key: %s", key_name);
+}
+
+void ir_white_screen(void)
+{
+    ESP_LOGI(TAG, "IR white screen command sent");
+}
+
+void ir_reset_screen(void)
+{
+    ESP_LOGI(TAG, "IR reset screen command sent");
+}
+
+bool ir_learn_command(const char *key_name)
+{
+    ESP_LOGI(TAG, "IR learn for key: %s", key_name);
+    return true; 
+}
+
+bool ir_save_command(const char *key_name)
+{
+    ESP_LOGI(TAG, "IR save command for key : %s", key_name);
+    return true;
+}
