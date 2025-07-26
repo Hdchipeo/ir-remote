@@ -25,6 +25,7 @@
 #include "ir_learn_err_check.h"
 #include "ir_config.h"
 #include "ir_storage.h"
+#include "driver_config.h"
 
 static const char *TAG = "Ir-learn";
 
@@ -326,7 +327,7 @@ static bool ir_learn_process_rx_data(ir_learn_common_param_t *learn_param, rmt_r
         return false;
     }
 
-    if (period < 500 * 1000)
+    if (period < 100 * 1000)
     {
         learn_param->ctx->learned_sub++;
     }
@@ -468,7 +469,7 @@ static void ir_learn_normal(ir_learn_common_param_t *learn_param, ir_event_cmd_t
         learn_param->user_cb(IR_LEARN_STATE_READY, 0, NULL);
     }
 
-    ir_learn_start(learn_param->ctx);
+    // ir_learn_start(learn_param->ctx);
 
     ESP_ERROR_CHECK(rmt_receive(rx_channel_handle,
                                 learn_param->ctx->rmt_rx.received_symbols,
@@ -497,19 +498,19 @@ static void ir_learn_normal(ir_learn_common_param_t *learn_param, ir_event_cmd_t
         }
     }
 
-    ir_learn_pause(learn_param->ctx);
+    // ir_learn_pause(learn_param->ctx);
 }
 static void ir_learn_step(ir_learn_common_param_t *learn_param, ir_event_cmd_t ir_event)
 {
     char step[IR_KEY_MAX_LEN] = "step";
-    float timediff_list[IR_STEP_COUNT_MAX] = {0};
+    int timediff_list[IR_STEP_COUNT_MAX] = {0};
     int step_index = 0;
     int64_t last_step_time = 0;
 
     if (learn_param->user_cb)
         learn_param->user_cb(IR_LEARN_STEP_READY, 0, NULL);
 
-    ir_learn_start(learn_param->ctx);
+    // ir_learn_start(learn_param->ctx);
 
     while (1)
     {
@@ -530,21 +531,18 @@ static void ir_learn_step(ir_learn_common_param_t *learn_param, ir_event_cmd_t i
             if (step_index > 0)
             {
                 int64_t diff_us = start_time - last_step_time;
-                timediff_list[step_index - 1] = diff_us / 1000000.0f;
-                ESP_LOGI(TAG, "Time since last step: %.2f seconds", timediff_list[step_index - 1]);
+                timediff_list[step_index - 1] = (int)(diff_us / 1000); // Convert to milliseconds
+                ESP_LOGI(TAG, "Time since last step: %d ms", timediff_list[step_index - 1]);
             }
 
             last_step_time = start_time;
 
-            snprintf(step, IR_KEY_MAX_LEN, "step_%d", step_index + 1);
-            snprintf(ir_event.key, IR_KEY_MAX_LEN, "%s/%s", ir_event.key_name_step, step);
+            snprintf(step, IR_KEY_MAX_LEN, "step%d", step_index + 1);
+            snprintf(ir_event.key, IR_KEY_MAX_LEN, "%s_%s", ir_event.key_name_step, step);
             ir_event.event = IR_EVENT_LEARN_DONE;
             ir_event.data = &learn_param->ctx->learn_result;
 
             send_data_to_ir_app(learn_param, &ir_event);
-
-            if (learn_param->user_cb)
-                learn_param->user_cb(IR_LEARN_STEP_END, 0, NULL);
 
             step_index++;
         }
@@ -555,16 +553,18 @@ static void ir_learn_step(ir_learn_common_param_t *learn_param, ir_event_cmd_t i
                 learn_param->user_cb(IR_LEARN_STEP_FAIL, 0, NULL);
         }
 
-        if(step_index >= IR_STEP_COUNT_MAX)
+        if (step_index >= IR_STEP_COUNT_MAX || (match_ir_with_key(&learn_param->ctx->learn_result, "exit", NULL)))
         {
-            ESP_LOGI(TAG, "Reached maximum step count: %d", IR_STEP_COUNT_MAX);
+            ESP_LOGI(TAG, "Learning step completed for key: %s", ir_event.key_name_step);
+            if (learn_param->user_cb)
+                learn_param->user_cb(IR_LEARN_STEP_END, 0, NULL);
             break;
         }
 
         ir_learn_pause(learn_param->ctx);
     }
 
-    ir_learn_pause(learn_param->ctx);
+    // ir_learn_pause(learn_param->ctx);
 
     if (step_index > 1)
     {
@@ -572,13 +572,33 @@ static void ir_learn_step(ir_learn_common_param_t *learn_param, ir_event_cmd_t i
         if (ret != ESP_OK)
             ESP_LOGE(TAG, "Failed to save timediff list for key: %s", ir_event.key_name_step);
         else
-            ESP_LOGI(TAG, "Saved %d step delays", step_index - 1);
+            ESP_LOGI(TAG, "Saved %d step delays (int, ms)", step_index - 1);
     }
 
     if (learn_param->user_cb)
         learn_param->user_cb(IR_LEARN_STEP_END, 0, &learn_param->ctx->learn_result);
 }
+static void ir_receiver_parse()
+{
+    ir_learn_start(learn_param->ctx);
 
+    ESP_ERROR_CHECK(rmt_receive(rx_channel_handle,
+                                learn_param->ctx->rmt_rx.received_symbols,
+                                learn_param->ctx->rmt_rx.num_symbols,
+                                &ir_learn_rmt_rx_cfg));
+
+    esp_err_t ret = ir_learn_active_receive_loop(learn_param);
+
+    if (ret == ESP_OK)
+    {
+        char matched_key[IR_KEY_MAX_LEN] = {0};
+        if (match_ir_with_key(&learn_param->ctx->learn_result, "toggle", matched_key))
+        {
+            set_relay_state();
+        }
+    }
+    ir_learn_pause(learn_param->ctx);
+}
 static void ir_learn_task(void *arg)
 {
     if (!arg)
@@ -589,18 +609,23 @@ static void ir_learn_task(void *arg)
     }
     learn_param = (ir_learn_common_param_t *)arg;
     ir_event_cmd_t ir_event;
+    ir_learn_start(learn_param->ctx);
 
     while (1)
     {
-        if (xQueueReceive(ir_learn_queue, &ir_event, portMAX_DELAY) == pdTRUE)
+        if (xQueueReceive(ir_learn_queue, &ir_event, pdMS_TO_TICKS(10)) == pdTRUE)
         {
             switch (ir_event.event)
             {
             case IR_EVENT_LEARN_NORMAL:
+                ir_learn_start(learn_param->ctx);
                 ir_learn_normal(learn_param, ir_event);
+                ir_learn_pause(learn_param->ctx);
                 break;
             case IR_EVENT_LEARN_STEP:
+                ir_learn_start(learn_param->ctx);
                 ir_learn_step(learn_param, ir_event);
+                ir_learn_pause(learn_param->ctx);
                 break;
             default:
                 ESP_LOGW(TAG, "Unknown IR event: %d", ir_event.event);
@@ -608,8 +633,10 @@ static void ir_learn_task(void *arg)
             }
         }
 
-        vTaskDelete(NULL);
+        ir_receiver_parse();
+        vTaskDelay(pdMS_TO_TICKS(10)); // Prevent busy-waiting
     }
+    vTaskDelete(NULL);
 }
 
 esp_err_t ir_learn_add_sub_list_node(struct ir_learn_sub_list_head *sub_head, uint32_t timediff, const rmt_rx_done_event_data_t *symbol)

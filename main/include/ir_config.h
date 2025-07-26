@@ -47,7 +47,7 @@ extern "C" {
  */
 #define IR_LEARN_COUNT 1
 
-#define IR_STEP_COUNT_MAX 3
+#define IR_STEP_COUNT_MAX 30
 
 /**
  * @brief Starts the IR learning task and initializes NVS and RMT peripherals.
@@ -98,18 +98,85 @@ void ir_white_screen(void);
 void ir_reset_screen(void);
 
 /**
- * @brief Sends an IR command based on the key name.
+ * @brief Starts the RMT transmission.
  * 
- * This function sends the IR command associated with the given key name.
- * It can be used to trigger specific actions or devices that respond to IR signals.
- * 
- * @param key_name The name of the IR command to send.
+ * This function initializes and starts the RMT peripheral for IR transmission.
+ * It prepares the RMT channel and sets the GPIO for output.
  */
+void rmt_tx_start(void);
+
+/**
+ * @brief Stops the RMT transmission.
+ * 
+ * This function stops the RMT peripheral and releases the resources used for IR transmission.
+ */
+void rmt_tx_stop(void);
+
+ /**
+  * @brief Sends an IR command based on the provided command string.
+  * This function is a wrapper for sending IR commands using the RMT peripheral.
+  */
 void ir_send_command(const char *command);
 
-bool ir_learn_command(const char *key_name);
+/**
+ * @brief Learns an IR command and saves it with the specified mode and name.
+ * 
+ * This function initiates the IR learning process for a specific mode and command name.
+ * It captures the IR signal and stores it in the SPIFFS storage.
+ * 
+ * @param mode The mode of the IR command (e.g., "normal", "step").
+ * @param name The name of the IR command to be learned.
+ * @return true if learning was successful, false otherwise.
+ */
 
+bool ir_learn_command(const char *mode, const char* name);
+
+/**
+ * @brief Saves the learned IR command to storage.
+ * 
+ * This function saves the IR command associated with the given key name to SPIFFS.
+ * It is typically called after learning a new IR command.
+ * 
+ * @param key_name The name of the IR command to save.
+ * @return true if saving was successful, false otherwise.
+ */
 bool ir_save_command(const char *key_name);
+
+/**
+ * @brief Matches the learned IR data with a key name.
+ * 
+ * This function checks if the learned IR data matches any key in the SPIFFS storage.
+ * If a match is found, it fills the matched_key_out with the corresponding key name.
+ * 
+ * @param data_learn Pointer to the list of learned IR symbols.
+ * @param key The key name to match against the learned data.
+ * @param matched_key_out Pointer to a buffer to store the matched key name.
+ * @return true if a match is found, false otherwise.
+ */
+bool match_ir_with_key(const struct ir_learn_sub_list_head *data_learn, const char *key, char *matched_key_out);
+
+/**
+ * @brief Deletes an IR command from storage.
+ * 
+ * This function removes the IR command associated with the given key name from SPIFFS.
+ * It is typically called when an IR command is no longer needed.
+ * 
+ * @param key_name The name of the IR command to delete.
+ * @return true if deletion was successful, false otherwise.
+ */
+bool ir_delete_command(const char *key_name);
+
+/**
+ * @brief Renames an IR command in storage.
+ * 
+ * This function renames the IR command from old_key_name to new_key_name in SPIFFS.
+ * It is typically called when an IR command needs to be renamed.
+ * 
+ * @param old_key_name The current name of the IR command.
+ * @param new_key_name The new name for the IR command.
+ * @return true if renaming was successful, false otherwise.
+ */
+bool ir_rename_command(const char *old_key_name, const char *new_key_name);
 
 #ifdef __cplusplus
 }

@@ -14,8 +14,8 @@ documentation: https://docs.espressif.com/projects/esp-iot-solution/en/latest/ir
 dependencies:
   idf: ">=5.0"
   cmake_utilities: "0.*"
-  # ota:
-  #   path: ${IDF_PATH}/components/my-component/ota
+  ota:
+    path: ${IDF_PATH}/components/my-component/ota
   espressif/esp_rainmaker:
     version: ">=1.0"
 sbom:

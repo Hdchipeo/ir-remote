@@ -16,6 +16,53 @@
 
 static const char *TAG = "IR_storage";
 
+void read_nvs(bool *ota_enabled)
+{
+    nvs_handle_t my_handle;
+    esp_err_t err = nvs_open("storage", NVS_READONLY, &my_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "NVS open failed: %s", esp_err_to_name(err));
+        return;
+    }
+
+    size_t size = sizeof(bool);
+    err = nvs_get_blob(my_handle, "ota_enabled", ota_enabled, &size);
+    if (err == ESP_ERR_NVS_NOT_FOUND) {
+        ESP_LOGW(TAG, "ota_enabled not found, using default: false");
+        *ota_enabled = false;
+    } else if (err != ESP_OK) {
+        ESP_LOGE(TAG, "Error reading ota_enabled: %s", esp_err_to_name(err));
+    } else {
+        ESP_LOGI(TAG, "Read ota_enabled = %s", *ota_enabled ? "true" : "false");
+    }
+
+    nvs_close(my_handle);
+}
+
+void write_nvs(bool ota_enabled)
+{
+    nvs_handle_t my_handle;
+    esp_err_t err = nvs_open("storage", NVS_READWRITE, &my_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "Error opening NVS handle: %s", esp_err_to_name(err));
+        return;
+    }
+
+    err = nvs_set_blob(my_handle, "ota_enabled", &ota_enabled, sizeof(bool));
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "Error writing ota_enabled: %s", esp_err_to_name(err));
+    }
+
+    err = nvs_commit(my_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "Error committing NVS: %s", esp_err_to_name(err));
+    }
+
+    ESP_LOGI(TAG, "NVS written");
+
+    nvs_close(my_handle);
+}
+
 static esp_err_t save_ir_list_to_file(const char *key, struct ir_learn_sub_list_head *list)
 {
     if (!key || !list)
@@ -302,60 +349,7 @@ esp_err_t spiffs_init(void)
 
     return ESP_OK;
 }
-esp_err_t save_device_state_to_nvs(device_state_t *state)
-{
-    nvs_handle_t nvs_handle;
-    esp_err_t err = nvs_open(NVS_IR_NAMESPACE, NVS_READWRITE, &nvs_handle);
-    if (err != ESP_OK)
-    {
-        ESP_LOGE(TAG, "Failed to open NVS (%s)", esp_err_to_name(err));
-        return err;
-    }
-
-    err = nvs_set_blob(nvs_handle, "device_state", state, sizeof(device_state_t));
-    if (err != ESP_OK)
-    {
-        ESP_LOGE(TAG, "Failed to save device state to NVS (%s)", esp_err_to_name(err));
-        nvs_close(nvs_handle);
-        return err;
-    }
-
-    err = nvs_commit(nvs_handle);
-    if (err != ESP_OK)
-    {
-        ESP_LOGE(TAG, "Failed to commit NVS changes (%s)", esp_err_to_name(err));
-    }
-
-    nvs_close(nvs_handle);
-    return err;
-}
-esp_err_t load_device_state_from_nvs(device_state_t *state)
-{
-    if (!state)
-        return ESP_ERR_INVALID_ARG;
-
-    nvs_handle_t nvs_handle;
-    esp_err_t err = nvs_open(NVS_IR_NAMESPACE, NVS_READWRITE, &nvs_handle);
-    if (err != ESP_OK)
-    {
-        ESP_LOGE(TAG, "Failed to open NVS (%s)", esp_err_to_name(err));
-        return err;
-    }
-
-    size_t required_size = sizeof(device_state_t);
-    err = nvs_get_blob(nvs_handle, "device_state", state, &required_size);
-    if (err == ESP_ERR_NVS_NOT_FOUND)
-    {
-        ESP_LOGW(TAG, "Device state not found, setting defaults.");
-        err = nvs_set_blob(nvs_handle, "device_state", state, sizeof(device_state_t));
-        if (err == ESP_OK)
-            err = nvs_commit(nvs_handle); // nhớ commit!
-    }
-
-    nvs_close(nvs_handle);
-    return err;
-}
-esp_err_t save_step_timediff_to_file(const char *key_name, const float *timediff_list, size_t count)
+esp_err_t save_step_timediff_to_file(const char *key_name, const int *timediff_list, size_t count)
 {
     if (!key_name || !timediff_list || count == 0 || count > IR_STEP_COUNT_MAX) {
         ESP_LOGE(TAG, "Invalid arguments to save_step_timediff_to_file");
@@ -372,14 +366,14 @@ esp_err_t save_step_timediff_to_file(const char *key_name, const float *timediff
     }
 
     for (size_t i = 0; i < count; i++) {
-        fprintf(f, "%.3f\n", timediff_list[i]); // mỗi dòng là một thời gian delay
+        fprintf(f, "%d\n", timediff_list[i]);  // Ghi mỗi delay là 1 dòng số nguyên
     }
 
     fclose(f);
-    ESP_LOGI(TAG, "Saved %d step delays to file: %s", count, filepath);
+    ESP_LOGI(TAG, "Saved %d step delays (int) to file: %s", count, filepath);
     return ESP_OK;
 }
-esp_err_t load_step_timediff_from_file(const char *key_name, float *timediff_list, size_t *count_out)
+esp_err_t load_step_timediff_from_file(const char *key_name, int *timediff_list, size_t *count_out)
 {
     if (!key_name || !timediff_list || !count_out) {
         ESP_LOGE(TAG, "Invalid arguments to load_step_timediff_from_file");
@@ -396,12 +390,12 @@ esp_err_t load_step_timediff_from_file(const char *key_name, float *timediff_lis
     }
 
     size_t count = 0;
-    while (fscanf(f, "%f", &timediff_list[count]) == 1 && count < IR_STEP_COUNT_MAX) {
+    while (fscanf(f, "%d", &timediff_list[count]) == 1 && count < IR_STEP_COUNT_MAX) {
         count++;
     }
 
     fclose(f);
     *count_out = count;
-    ESP_LOGI(TAG, "Loaded %d step delays from file: %s", count, filepath);
+    ESP_LOGI(TAG, "Loaded %d step delays (int) from file: %s", count, filepath);
     return ESP_OK;
 }

@@ -25,11 +25,21 @@
 #include "esp_err.h"
 #include "esp_check.h"
 #include "esp_system.h"
+#include "espnow_config.h"
 
 static const char *TAG = "Driver_IR_learn";
 
 rmt_channel_handle_t tx_channel = NULL;
 rmt_encoder_handle_t raw_encoder = NULL; /**< IR learn handle */
+extern QueueHandle_t ir_trans_queue;     /**< Queue to handle IR transmit events */
+extern QueueHandle_t ir_learn_queue;     /**< Queue to handle IR learn events */
+
+void listener_ir()
+{
+    ir_event_cmd_t ir_event = {
+        .event = IR_EVENT_LEARN_NORMAL};
+    xQueueSend(ir_learn_queue, &ir_event, portMAX_DELAY);
+}
 
 static bool compare_ir_symbols(const rmt_symbol_word_t *a, size_t a_num,
                                const rmt_symbol_word_t *b, size_t b_num)
@@ -61,6 +71,56 @@ static int count_sub_nodes(const struct ir_learn_sub_list_head *head)
         count++;
     }
     return count;
+}
+
+bool match_ir_with_key(const struct ir_learn_sub_list_head *data_learn, const char *key, char *matched_key_out)
+{
+    if (!key || strlen(key) == 0) {
+        ESP_LOGE("IR_MATCH", "Invalid key");
+        return false;
+    }
+
+    struct ir_learn_sub_list_head temp_list;
+    SLIST_INIT(&temp_list);
+
+    ir_learn_load(&temp_list, key);
+    ESP_LOGI("IR_MATCH", "Checking key: %s", key);
+
+    if (SLIST_EMPTY(&temp_list)) {
+        ir_learn_clean_sub_data(&temp_list);
+        return false;
+    }
+
+    struct ir_learn_sub_list_t *sub_a = SLIST_FIRST(data_learn);
+    struct ir_learn_sub_list_t *sub_b = SLIST_FIRST(&temp_list);
+    bool all_matched = true;
+
+    while (sub_a && sub_b)
+    {
+        if (!compare_ir_symbols(sub_a->symbols.received_symbols, sub_a->symbols.num_symbols,
+                                sub_b->symbols.received_symbols, sub_b->symbols.num_symbols))
+        {
+            ESP_LOGI("IR_MATCH", "Mismatch with key: %s", key);
+            all_matched = false;
+            break;
+        }
+        sub_a = SLIST_NEXT(sub_a, next);
+        sub_b = SLIST_NEXT(sub_b, next);
+    }
+
+    if (sub_a != NULL || sub_b != NULL)
+    {
+        all_matched = false;
+    }
+
+    ir_learn_clean_sub_data(&temp_list);
+
+    if (all_matched && matched_key_out)
+    {
+        strncpy(matched_key_out, key, 32);
+    }
+
+    return all_matched;
 }
 
 bool match_ir_from_spiffs(const struct ir_learn_sub_list_head *data_learn, char *matched_key_out)
@@ -157,12 +217,12 @@ static esp_err_t ir_tx_init(void)
 
     return ESP_OK;
 }
-static void rmt_tx_start(void)
+void rmt_tx_start(void)
 {
     ir_tx_init();
     ESP_ERROR_CHECK(rmt_enable(tx_channel));
 }
-static void rmt_tx_stop(void)
+void rmt_tx_stop(void)
 {
     ESP_ERROR_CHECK(rmt_disable(tx_channel));
     rmt_del_channel(tx_channel);
@@ -176,8 +236,6 @@ void ir_send_raw(struct ir_learn_sub_list_head *rmt_out)
     rmt_transmit_config_t transmit_cfg = {
         .loop_count = 0, // no loop
     };
-
-    rmt_tx_start();
     ESP_LOGI(TAG, "Starting IR transmission...");
 
     SLIST_FOREACH(sub_it, rmt_out, next)
@@ -201,7 +259,6 @@ void ir_send_raw(struct ir_learn_sub_list_head *rmt_out)
         }
         rmt_tx_wait_all_done(tx_channel, -1);
     }
-    rmt_tx_stop();
     ESP_LOGI(TAG, "IR transmission completed");
 }
 
@@ -220,9 +277,10 @@ void ir_send_step(const char *key_name)
 
     for (size_t i = 0; i < count; i++)
     {
-        snprintf(key_name_load, IR_KEY_MAX_LEN, "%s_step_%d", key_name, i + 1);
+        snprintf(key_name_load, IR_KEY_MAX_LEN, "%s_step%d", key_name, i + 1);
         esp_err_t ret = ir_learn_load(&load_data, key_name_load);
-        if (ret != ESP_OK) {
+        if (ret != ESP_OK)
+        {
             ESP_LOGE(TAG, "Failed to load IR data from: %s", key_name_load);
             continue;
         }
@@ -235,28 +293,114 @@ void ir_send_step(const char *key_name)
 
 void ir_send_command(const char *key_name)
 {
-    //ir_send_step(key_name);
     ESP_LOGI(TAG, "IR command sent for key: %s", key_name);
+    ir_event_cmd_t IR_cmd = {
+        .event = IR_EVENT_TRANSMIT};
+    snprintf(IR_cmd.key, IR_KEY_MAX_LEN, "%s", key_name);
+    xQueueSend(ir_trans_queue, &IR_cmd, portMAX_DELAY);
+
+    send_data_to_screen(key_name, "normal");
 }
 
 void ir_white_screen(void)
 {
     ESP_LOGI(TAG, "IR white screen command sent");
+    ir_event_cmd_t IR_cmd = {
+        .event = IR_EVENT_SEND_STEP};
+    snprintf(IR_cmd.key_name_step, IR_KEY_MAX_LEN, "white");
+    xQueueSend(ir_trans_queue, &IR_cmd, portMAX_DELAY);
+
+    send_data_to_screen(WHITE_SCREEN_CMD, "step");
 }
 
 void ir_reset_screen(void)
 {
     ESP_LOGI(TAG, "IR reset screen command sent");
+    ir_event_cmd_t IR_cmd = {
+        .event = IR_EVENT_SEND_STEP};
+    snprintf(IR_cmd.key_name_step, IR_KEY_MAX_LEN, "reset");
+    xQueueSend(ir_trans_queue, &IR_cmd, portMAX_DELAY);
+
+    send_data_to_screen(RESET_SCREEN_CMD, "step");
 }
 
-bool ir_learn_command(const char *key_name)
+void ir_learn_single(const char *key_name)
 {
     ESP_LOGI(TAG, "IR learn for key: %s", key_name);
-    return true; 
+    ir_event_cmd_t ir_event = {
+        .event = IR_EVENT_LEARN_NORMAL};
+    snprintf(ir_event.key, IR_KEY_MAX_LEN, "%s", key_name);
+    xQueueSend(ir_learn_queue, &ir_event, portMAX_DELAY);
+}
+void ir_learn_step(const char *key_name_step)
+{
+    ESP_LOGI(TAG, "IR learn step for key: %s", key_name_step);
+    ir_event_cmd_t ir_event = {
+        .event = IR_EVENT_LEARN_STEP};
+    snprintf(ir_event.key_name_step, IR_KEY_MAX_LEN, "%s", key_name_step);
+    xQueueSend(ir_learn_queue, &ir_event, portMAX_DELAY);
+}
+
+bool ir_learn_command(const char *mode, const char *name)
+{
+    ESP_LOGI(TAG, "IR learn command for mode: %s", mode);
+    send_data_to_screen(name, mode);
+    if (strcmp(mode, "normal") == 0)
+    {
+        ir_learn_single(name);
+    }
+    else if (strcmp(mode, "step") == 0)
+    {
+        ir_learn_step(name);
+    }
+    else
+    {
+        ESP_LOGE(TAG, "Unknown IR learn mode: %s", mode);
+        return false;
+    }
+    return true;
 }
 
 bool ir_save_command(const char *key_name)
 {
     ESP_LOGI(TAG, "IR save command for key : %s", key_name);
+    return true;
+}
+
+bool ir_delete_command(const char *key_name)
+{
+    ESP_LOGI(TAG, "IR delete command for key: %s", key_name);
+    if (!key_name || strlen(key_name) == 0)
+    {
+        ESP_LOGE(TAG, "Invalid key name for deletion");
+        return false;
+    }
+
+    esp_err_t err = delete_ir_key_from_spiffs(key_name);
+    if (err != ESP_OK)
+    {
+        ESP_LOGE(TAG, "Failed to delete IR key from SPIFFS: %s", esp_err_to_name(err));
+        return false;
+    }
+
+    return true;
+
+}
+bool ir_rename_command(const char *old_key_name, const char *new_key_name)
+{
+    ESP_LOGI(TAG, "IR rename command from %s to %s", old_key_name, new_key_name);
+    if (!old_key_name || !new_key_name || strlen(old_key_name) == 0 || strlen(new_key_name) == 0)
+    {
+        ESP_LOGE(TAG, "Invalid key names for renaming");
+        return false;
+    }
+
+    esp_err_t err = rename_ir_key_in_spiffs(old_key_name, new_key_name);
+    if (err != ESP_OK)
+    {
+        ESP_LOGE(TAG, "Failed to rename IR key in SPIFFS: %s", esp_err_to_name(err));
+        return false;
+    }
+
     return true;
 }

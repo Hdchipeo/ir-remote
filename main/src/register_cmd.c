@@ -18,7 +18,6 @@
 extern QueueHandle_t ir_learn_queue;
 extern QueueHandle_t ir_trans_queue;
 extern ir_learn_common_param_t *learn_param; // Pointer to the IR learn parameters
-extern device_state_t g_device_state;        // Global device state
 extern bool light_flag;
 
 static const char *TAG = "IR_CMD";
@@ -162,6 +161,20 @@ static int ir_reset_spiffs_cmd(int argc, char **argv)
 
     return 0;
 }
+static int ir_reset_nvs_cmd(int argc, char **argv)
+{
+    esp_err_t err = nvs_flash_erase();
+    if (err == ESP_OK)
+    {
+        ESP_LOGI(TAG, "NVS storage reset successfully.");
+    }
+    else
+    {
+        ESP_LOGE(TAG, "Failed to reset NVS storage: %s", esp_err_to_name(err));
+    }
+
+    return 0;
+}
 
 static int ir_rename_key_cmd(int argc, char **argv)
 {
@@ -179,49 +192,18 @@ static int ir_rename_key_cmd(int argc, char **argv)
 
     return 0;
 }
-static int ir_device_state_cmd(int argc, char **argv)
-{
-    load_device_state_from_nvs(&g_device_state);
 
-    ESP_LOGI(TAG, "Current device state loaded from NVS:");
-    ESP_LOGI(TAG, "AC power: %s, temp: %d, mode: %s, fan speed: %s",
-             toggle_power_to_str(g_device_state.ac.power_on), g_device_state.ac.temperature,
-             ir_mode_to_str(g_device_state.ac.mode), ir_fan_to_str(g_device_state.ac.speed));
-    ESP_LOGI(TAG, "Fan power: %s, speed: %s, oscillation: %d",
-             toggle_power_to_str(g_device_state.fan.power_on), ir_fan_to_str(g_device_state.fan.speed),
-             g_device_state.fan.oscillation);
-    ESP_LOGI(TAG, "Light power: %s",
-             toggle_power_to_str(g_device_state.light.power_on));
-
-    return 0;
-}
-void register_ir_device_state_commands(void)
+void register_ir_reset_nvs_commands(void)
 {
     /* Register custom commands here */
-    esp_console_cmd_t device_state_cmd = {
-        .command = "device_state",
-        .help = "Get current device state from NVS",
+    esp_console_cmd_t reset_cmd = {
+        .command = "reset_nvs",
+        .help = "Reset NVS storage",
         .hint = NULL,
-        .func = &ir_device_state_cmd,
+        .func = &ir_reset_nvs_cmd,
         .argtable = NULL};
 
-    ESP_ERROR_CHECK(esp_console_cmd_register(&device_state_cmd));
-}
-
-void register_ir_rename_commands(void)
-{
-    rename_args.old_key = arg_strn(NULL, NULL, "<old_key>", 1, 1, "Old IR key name");
-    rename_args.new_key = arg_strn(NULL, NULL, "<new_key>", 1, 1, "New IR key name");
-    rename_args.end = arg_end(2);
-    /* Register custom commands here */
-    esp_console_cmd_t rename_cmd = {
-        .command = "rename",
-        .help = "Rename IR key in storage",
-        .hint = NULL,
-        .func = &ir_rename_key_cmd,
-        .argtable = (void **)&rename_args};
-
-    ESP_ERROR_CHECK(esp_console_cmd_register(&rename_cmd));
+    ESP_ERROR_CHECK(esp_console_cmd_register(&reset_cmd));
 }
 void register_ir_input_name_commands(void)
 {
@@ -236,6 +218,21 @@ void register_ir_input_name_commands(void)
         .argtable = &ir_key_args};
 
     ESP_ERROR_CHECK(esp_console_cmd_register(&input_name_cmd));
+}
+void register_ir_rename_commands(void)
+{
+    rename_args.old_key = arg_strn(NULL, NULL, "<old_key>", 1, 1, "Old IR key name");
+    rename_args.new_key = arg_strn(NULL, NULL, "<new_key>", 1, 1, "New IR key name");
+    rename_args.end = arg_end(2);
+    /* Register custom commands here */
+    esp_console_cmd_t rename_cmd = {
+        .command = "rename",
+        .help = "Rename IR key in storage",
+        .hint = NULL,
+        .func = &ir_rename_key_cmd,
+        .argtable = (void **)&rename_args};
+
+    ESP_ERROR_CHECK(esp_console_cmd_register(&rename_cmd));
 }
 void register_ir_format_spiffs_commands(void)
 {

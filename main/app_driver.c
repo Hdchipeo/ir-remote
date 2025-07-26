@@ -38,7 +38,7 @@ static void button_event_cb(void *arg, void *data)
         xQueueSend(ir_learn_queue, &ir_event, portMAX_DELAY);
     }
 }
-void config_btn_gpio()
+static void config_btn_gpio()
 {
     const button_config_t btn_cfg = {0};
     const button_gpio_config_t btn_gpio_cfg = {
@@ -61,6 +61,30 @@ static void config_light_state_gpio()
         .intr_type = GPIO_INTR_DISABLE};
     ESP_ERROR_CHECK(gpio_config(&light_conf));
     gpio_set_level(LIGHT_STATE, 0);
+}
+static void config_relay_gpio()
+{
+    gpio_config_t relay_conf = {
+        .pin_bit_mask = BIT64(RELAY_GPIO),
+        .mode = GPIO_MODE_OUTPUT,
+        .pull_up_en = false,
+        .pull_down_en = false,
+        .intr_type = GPIO_INTR_DISABLE};
+    ESP_ERROR_CHECK(gpio_config(&relay_conf));
+    gpio_set_level(RELAY_GPIO, 0); // Initialize relay to OFF state
+}
+void set_relay_state()
+{
+    static bool state = false;
+    state = !state; // Toggle relay state
+    if (state)
+    {
+        gpio_set_level(RELAY_GPIO, 1); // Turn ON relay
+    }
+    else
+    {
+        gpio_set_level(RELAY_GPIO, 0); // Turn OFF relay
+    }
 }
 void set_light_state(gpio_num_t gpio_num)
 {
@@ -99,6 +123,7 @@ void app_driver_init()
     ESP_LOGI(TAG, "Initializing device...");
     config_btn_gpio();         // Configure button GPIO
     config_light_state_gpio(); // Configure light state GPIO
+    config_relay_gpio();      // Configure relay GPIO
     ESP_LOGI(TAG, "Device initialized successfully.");
     xTaskCreate(light_state_task, "light_state_task", 2048, NULL, 5, NULL); // Create light state task
     ESP_LOGI(TAG, "Light state task created successfully.");

@@ -18,7 +18,7 @@
 #include "esp_now.h"
 #include "esp_crc.h"
 #include "espnow_config.h"
-#include "device.h"
+
 #include "ir_config.h"
 #include "ir_learn.h"
 #include "ir_storage.h"
@@ -28,9 +28,11 @@ static const char *TAG = "Esp-now";
 static QueueHandle_t s_espnow_queue = NULL;
 extern QueueHandle_t ir_trans_queue;
 
-static uint8_t broadcast_mac[ESP_NOW_ETH_ALEN] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+extern remote_state_t remote_state;
 
-device_state_t g_device_state;
+static uint8_t broadcast_mac[ESP_NOW_ETH_ALEN] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+static uint8_t button_mac[ESP_NOW_ETH_ALEN] = {0x48, 0xca, 0x43, 0xd0, 0x21, 0xfc};
+static uint8_t screen_mac[ESP_NOW_ETH_ALEN] = {0x78, 0x1c, 0x3c, 0x2b, 0xbb, 0x80};
 
 static void wifi_event_handler(void *arg, esp_event_base_t event_base,
                                int32_t event_id, void *event_data)
@@ -69,6 +71,8 @@ void app_wifi_init(void)
             .channel = CONFIG_ESPNOW_CHANNEL,
             .password = CONFIG_ESP_WIFI_PASS,
             .max_connection = CONFIG_MAX_STA_CONN,
+            .authmode = (strlen(CONFIG_ESP_WIFI_PASS) == 0) ? WIFI_AUTH_OPEN : WIFI_AUTH_WPA2_PSK,
+            .ssid_hidden = false,
         }};
     ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
     ESP_ERROR_CHECK(esp_wifi_set_mode(ESPNOW_WIFI_MODE));
@@ -168,34 +172,43 @@ static void espnow_recv_cb(const esp_now_recv_info_t *recv_info, const uint8_t *
         free(recv_cb->data);
     }
 }
-static void update_and_send_device_state(device_state_t *state)
+
+static void handle_received_data(espnow_event_recv_cb_t *recv_cb)
 {
-    if (state == NULL)
+    if (recv_cb->data_len != sizeof(button_data_t))
     {
-        ESP_LOGE(TAG, "Device state is NULL");
+        ESP_LOGW(TAG, "Unexpected data length: %d", recv_cb->data_len);
         return;
     }
-    ir_event_cmd_t ir_event;
-    char key_buffer[IR_KEY_MAX_LEN] = {0};
 
-    // Update the device state
-    save_device_state_to_nvs(state);
+    button_data_t espnow_data;
+    memcpy(&espnow_data, recv_cb->data, sizeof(button_data_t));
 
-    ir_state_get_key(state, key_buffer, IR_KEY_MAX_LEN);
-    strncpy(ir_event.key, key_buffer, IR_KEY_MAX_LEN);
-    ir_event.event = IR_EVENT_TRANSMIT;
-    xQueueSend(ir_trans_queue, &ir_event, portMAX_DELAY);
-    ESP_LOGI(TAG, "Send IR key %s to TX Task", ir_event.key);
+    remote_state = espnow_data.state;
+    ESP_LOGI(TAG, "Remote state updated: %d", remote_state);
+
+    ESP_LOGI(TAG, "Received button state with command: %s, model: %s",
+             espnow_data.cmd, espnow_data.model);
+
+    if (strcmp(espnow_data.cmd, WHITE_SCREEN_CMD) == 0)
+    {
+        ESP_LOGI(TAG, "White screen command received, sending IR command.");
+        ir_white_screen();
+    }
+    else if (strcmp(espnow_data.cmd, RESET_SCREEN_CMD) == 0)
+    {
+        ESP_LOGI(TAG, "Reset screen command received, sending IR command.");
+        ir_reset_screen();
+    }
+    else
+    {
+        ESP_LOGW(TAG, "Unknown command received: %s", espnow_data.cmd);
+    }
 }
+
 static void espnow_task(void *pvParameter)
 {
     espnow_event_t evt;
-
-    ir_state_init(&g_device_state);
-    if (load_device_state_from_nvs(&g_device_state) != ESP_OK)
-    {
-        ESP_LOGE(TAG, "Failed to load device state from NVS");
-    }
 
     while (xQueueReceive(s_espnow_queue, &evt, portMAX_DELAY) == pdTRUE)
     {
@@ -208,11 +221,7 @@ static void espnow_task(void *pvParameter)
         case ESPNOW_RECV_CB:
         {
             espnow_event_recv_cb_t *recv_cb = &evt.info.recv_cb;
-            ESP_LOGI(TAG, "Receive ESPNOW data from: " MACSTR ", len: %d",
-                     MAC2STR(recv_cb->mac_addr), recv_cb->data_len);
-
-            ir_state_handle_command(&g_device_state, *(ir_command_packet_t *)recv_cb->data);
-            update_and_send_device_state(&g_device_state);
+            handle_received_data(recv_cb);
             free(recv_cb->data);
             break;
         }
@@ -245,6 +254,8 @@ static esp_err_t espnow_init(void)
 
     /* Add broadcast peer information to peer list. */
     espnow_add_peer(broadcast_mac, false);
+    espnow_add_peer(button_mac, false);
+    espnow_add_peer(screen_mac, false);
 
     xTaskCreate(espnow_task, "esp_now_task", 4096, NULL, 4, NULL);
 
@@ -263,4 +274,45 @@ static void espnow_deinit()
 void app_espnow_stop(void)
 {
     espnow_deinit();
+}
+
+static void espnow_send_command(button_data_t *button_data, const uint8_t *ir_device_mac_addr)
+{
+    if (button_data == NULL) {
+        ESP_LOGE(TAG, "Button data is NULL");
+        return;
+    }
+
+    uint8_t command[sizeof(button_data_t)];
+    memcpy(command, button_data, sizeof(button_data_t));
+    size_t command_length = sizeof(button_data_t);
+
+    esp_err_t ret = esp_now_send(ir_device_mac_addr, command, command_length);
+
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Send command failed: %s", esp_err_to_name(ret));
+    } else {
+        ESP_LOGI(TAG, "Command sent successfully");
+    }
+
+}
+void send_data_to_screen(const char *cmd, const char *model)
+{
+    button_data_t button_data;
+    memset(&button_data, 0, sizeof(button_data_t));
+    strncpy(button_data.cmd, cmd, sizeof(button_data.cmd) - 1);
+    strncpy(button_data.model, model, sizeof(button_data.model) - 1);
+
+    espnow_send_command(&button_data, screen_mac);
+}
+
+void response_to_button(const char *cmd, const char *model, remote_state_t state)
+{
+    button_data_t button_data;
+    memset(&button_data, 0, sizeof(button_data_t));
+    strncpy(button_data.cmd, cmd, sizeof(button_data.cmd) - 1);
+    strncpy(button_data.model, model, sizeof(button_data.model) - 1);
+    button_data.state = state;
+
+    espnow_send_command(&button_data, button_mac);
 }

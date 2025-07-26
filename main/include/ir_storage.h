@@ -2,7 +2,6 @@
 
 #include "esp_err.h"
 #include "ir_learn.h"  // Make sure this contains the definition of struct ir_learn_sub_list_head
-#include "device.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -61,21 +60,6 @@ esp_err_t rename_ir_key_in_spiffs(const char *old_key, const char *new_key);
 esp_err_t spiffs_init(void);
 
 /**
- * @brief Save device state to NVS.
- * 
- * @param state Device state to save
- * @return ESP_OK on success
- */
-esp_err_t save_device_state_to_nvs(device_state_t *state);
-
-/**
- * @brief Load device state from NVS.
- * 
- * @param state Pointer to the device state structure to fill
- * @return ESP_OK on success
- */
-esp_err_t load_device_state_from_nvs(device_state_t *state);
-/**
  * @brief Match IR data from SPIFFS with received IR data.
  * 
  * @param data_learn Pointer to the list of learned IR data
@@ -92,7 +76,7 @@ bool match_ir_from_spiffs(const struct ir_learn_sub_list_head *data_learn, char 
  * @param count Number of timediffs in the list
  * @return ESP_OK on success, or appropriate error code
  */
-esp_err_t save_step_timediff_to_file(const char *key_name, const float *timediff_list, size_t count);
+esp_err_t save_step_timediff_to_file(const char *key_name, const int *timediff_list, size_t count);
 
 /**
  * @brief Load step timediff data from a file.
@@ -102,7 +86,7 @@ esp_err_t save_step_timediff_to_file(const char *key_name, const float *timediff
  * @param count_out Pointer to store the number of timediffs loaded
  * @return ESP_OK on success, or appropriate error code
  */
-esp_err_t load_step_timediff_from_file(const char *key_name, float *timediff_list, size_t *count_out);
+esp_err_t load_step_timediff_from_file(const char *key_name, int *timediff_list, size_t *count_out);
 
 /**
  * @brief List all IR step delay files in SPIFFS.
@@ -110,6 +94,8 @@ esp_err_t load_step_timediff_from_file(const char *key_name, float *timediff_lis
  * This function lists all files with the ".timediff" extension in the SPIFFS partition.
  */
 void list_ir_step_delay_from_spiffs(void);
+void read_nvs(bool *ota_enabled);
+void write_nvs(bool ota_enabled);
 
 #ifdef __cplusplus
 }

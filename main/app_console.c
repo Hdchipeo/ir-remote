@@ -36,9 +36,9 @@ void app_console_start()
     register_ir_format_spiffs_commands();
     register_ir_input_name_commands();
     register_ir_rename_commands();
-    register_ir_device_state_commands();
     register_ir_learn_step_commands();
     register_ir_send_step_commands();
+    register_ir_reset_nvs_commands();
     ESP_LOGI(TAG, "Registering IR commands");
 
 

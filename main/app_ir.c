@@ -25,7 +25,7 @@
 #include "ir_config.h"
 #include "driver_config.h"
 #include "ir_storage.h"
-#include "device.h"
+#include "espnow_config.h"
 
 static const char *TAG = "App_IR_learn";
 
@@ -35,10 +35,9 @@ static struct ir_learn_sub_list_head ir_data;
 QueueHandle_t ir_trans_queue = NULL;
 QueueHandle_t ir_learn_queue = NULL;
 
-extern ir_learn_common_param_t *learn_param; // Pointer to the IR learn parameters
-extern device_state_t g_device_state;        // Global device state
-
-extern bool light_flag; // Flag to control light state
+extern ir_learn_common_param_t *learn_param;     // Pointer to the IR learn parameters
+extern bool light_flag;                          // Flag to control light state
+remote_state_t remote_state = REMOTE_STATE_IDLE; // Current state of the remote
 
 static void ir_send_cb(ir_learn_state_t state, uint8_t sub_step, struct ir_learn_sub_list_head *data)
 {
@@ -98,31 +97,41 @@ static void ir_learn_tx_task(void *arg)
             switch (ir_event.event)
             {
             case IR_EVENT_TRANSMIT:
-                ir_rx_stop(); // Stop IR RX before transmitting
+                rmt_tx_start();
                 ESP_LOGI(TAG, "IR transmit command for key: %s", ir_event.key);
                 ir_learn_load(&ir_data, ir_event.key);
                 ir_send_raw(&ir_data);
-                update_device_state_from_key(&g_device_state, ir_event.key);
                 ir_learn_clean_sub_data(&ir_data);
-                ir_rx_restart(learn_param);
+                rmt_tx_stop();
                 break;
             case IR_EVENT_SEND_STEP:
+                rmt_tx_start();
                 ESP_LOGI(TAG, "IR send step command for key: %s", ir_event.key_name_step);
-                float loaded_list[IR_STEP_COUNT_MAX] = {0};
+                int loaded_list[IR_STEP_COUNT_MAX] = {0};
                 char key_name_load[IR_KEY_MAX_LEN] = {0};
                 size_t count = 0;
                 load_step_timediff_from_file(ir_event.key_name_step, loaded_list, &count);
 
-                for(size_t i = 0; i <= count; i++)
+                for (size_t i = 0; i <= count; i++)
                 {
-                    snprintf(key_name_load, IR_KEY_MAX_LEN, "%s/step_%d", ir_event.key_name_step, i + 1);
+                    if (remote_state == STOP_SENDING)
+                    {
+                        ESP_LOGI(TAG, "IR send step command stopped for key: %s", ir_event.key_name_step);
+                        response_to_button(ir_event.key_name_step, "unknow", NOT_SENDING);
+                        break;
+                    }
+                    snprintf(key_name_load, IR_KEY_MAX_LEN, "%s_step%d", ir_event.key_name_step, i + 1);
                     ESP_LOGI(TAG, "Loading step: %s", key_name_load);
                     ir_learn_load(&ir_data, key_name_load);
                     ir_send_raw(&ir_data);
                     ir_learn_clean_sub_data(&ir_data);
-                    vTaskDelay(pdMS_TO_TICKS(loaded_list[i] * 1000)); // Delay for the step duration
+                    vTaskDelay(pdMS_TO_TICKS(loaded_list[i]));
                 }
                 ESP_LOGI(TAG, "IR send step command completed for key: %s", ir_event.key_name_step);
+
+                response_to_button(ir_event.key_name_step, "unknow", SEND_DONE);
+
+                rmt_tx_stop();
                 break;
             case IR_EVENT_LEARN_DONE:
                 ir_learn_save(&ir_data, ir_event.data, ir_event.key);

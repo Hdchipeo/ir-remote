@@ -17,6 +17,7 @@
         "ir_learn.h": "c",
         "string.h": "c",
         "assert.h": "c",
-        "esp_now_hub.h": "c"
+        "esp_now_hub.h": "c",
+        "ir_storage.h": "c"
     }
 }

@@ -2,7 +2,6 @@ SET(SOURCE src/ir_learn.c
 			src/ir_encoder.c
 			src/register_cmd.c
 			src/ir_storage.c
-			src/device.c
 			src/ir.c)
 
 idf_component_register(SRCS ${SOURCE} "main.c" "app_ir.c" "app_console.c" "app_driver.c" "app_espnow.c" "app_web_server.c"

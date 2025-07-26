@@ -14,6 +14,13 @@ menu "IR App Configuration"
         range 0 39
         help
             Set the GPIO number used for the button (default: GPIO15)
+    
+    config RELAY_GPIO
+        int "GPIO for Relay"
+        default 4
+        range 0 39
+        help
+            Set the GPIO number used for the relay (default: GPIO5)
 
     config IR_TX_GPIO
         int "GPIO for IR TX"
@@ -134,12 +141,12 @@ menu "Werserver config"
     
 endmenu
 
-menu "OTA config"
+menu "CONSOLE config"
 
-    config OTA_ENABLED
-        bool "Enable OTA"
+    config CONSOLE_ENABLED
+        bool "Enable Console"
         default "n"
         help
-            Enable Over-The-Air (OTA) updates for the application.
+            Enable the console for debugging and logging purposes. This will allow you to see debug messages in the terminal.
 
 endmenu

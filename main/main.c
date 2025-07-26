@@ -9,18 +9,15 @@
 #include "espnow_config.h"
 #include "web_server.h"
 #include "console.h"
-
-#if CONFIG_OTA_ENABLED
+#include "ir_storage.h"
 #include "ota.h"
-#endif
+
+bool ota_enabled = false;
 
 static const char *TAG = "Ir_Remote";
 
 void app_main(void)
 {
-#if CONFIG_OTA_ENABLED
-    app_ota_start(); // Start the OTA application
-#else
 
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND)
@@ -30,12 +27,26 @@ void app_main(void)
     }
     ESP_ERROR_CHECK(ret);
 
-    app_wifi_init(); // Initialize Wi-Fi for ESPNOW communication
-#endif
-    app_espnow_start();     // Start the ESPNOW application
-    app_web_server_start(); // Start the web server for remote control
+    read_nvs(&ota_enabled);
+
     ir_task_start();        // Start the IR task
     app_driver_init();      // Initialize device components
-    app_console_start();    // Start the console for user interaction
     ESP_LOGI(TAG, "IR Remote Control Application Started");
+
+#if CONFIG_CONSOLE_ENABLED
+    app_console_start();    // Start the console for user interaction
+#endif
+
+    if(ota_enabled)
+    {
+        ota_enabled = false;
+        write_nvs(ota_enabled);
+        app_ota_start(); // Start the OTA application
+    }
+    else
+    {
+        app_wifi_init(); // Initialize Wi-Fi for ESPNOW communication
+    }
+    app_espnow_start();     // Start the ESPNOW application
+    app_web_server_start(); // Start the web server for remote control
 }

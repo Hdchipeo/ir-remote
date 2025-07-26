@@ -17,6 +17,12 @@ extern "C" {
  */
 #define IR_BUTTON CONFIG_BUTTON_GPIO
 
+
+/**
+ * @brief GPIO number for relay controlling the device.
+ */
+#define RELAY_GPIO CONFIG_RELAY_GPIO
+
 /**
  * @brief Initialize device peripherals (e.g., GPIOs, LEDs, buttons).
  */
@@ -29,10 +35,7 @@ void app_driver_init();
  */
 void set_light_state(gpio_num_t gpio_num);
 
-/**
- * @brief Configure GPIO pins used for input buttons.
- */
-void config_btn_gpio(void);
+void set_relay_state();
 
 #ifdef __cplusplus
 }

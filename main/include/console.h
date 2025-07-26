@@ -61,6 +61,11 @@ void register_ir_learn_step_commands(void);
  */
 void register_ir_send_step_commands(void);
 
+/**
+ * @brief Register command to reset IR NVS storage.
+ */
+void register_ir_reset_nvs_commands(void);
+
 #ifdef __cplusplus
 }
 #endif
