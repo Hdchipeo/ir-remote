@@ -16,6 +16,10 @@
 #include "lwip/netdb.h"
 #include "lwip/inet.h"
 #include "lwip/ip_addr.h"
+#include "index_html.h" // Include your HTML index file
+#include "style_css.h"
+#include "script_js.h"
+#include "cJSON.h"
 
 static const char *TAG = "WebServer";
 static httpd_handle_t s_server = NULL;
@@ -136,6 +140,27 @@ static esp_err_t static_file_get_handler(httpd_req_t *req)
 
     httpd_resp_sendstr_chunk(req, NULL);
     fclose(file);
+    return ESP_OK;
+}
+
+esp_err_t index_handler(httpd_req_t *req)
+{
+    httpd_resp_set_type(req, "text/html");
+    httpd_resp_send(req, (const char *)index_html, index_html_len);
+    return ESP_OK;
+}
+
+esp_err_t css_handler(httpd_req_t *req)
+{
+    httpd_resp_set_type(req, "text/css");
+    httpd_resp_send(req, (const char *)style_css, style_css_len);
+    return ESP_OK;
+}
+
+esp_err_t js_handler(httpd_req_t *req)
+{
+    httpd_resp_set_type(req, "application/javascript");
+    httpd_resp_send(req, (const char *)script_js, script_js_len);
     return ESP_OK;
 }
 
@@ -310,19 +335,29 @@ esp_err_t ir_list_handler(httpd_req_t *req)
             fclose(f);
         }
 
-        // Ghi các delay tương ứng với step đã tồn tại
-        bool first_delay = true;
+        // Mảng lưu các step tồn tại
+        int step_index[64];
+        int step_count = 0;
+
         for (int j = 0; j < 64; j++)
         {
-            if (!keys[i].step_exist[j])
-                continue;
-
-            if (!first_delay)
-                offset += snprintf(json + offset, sizeof(json) - offset, ",");
-            offset += snprintf(json + offset, sizeof(json) - offset, "%d", delays[j]);
-            first_delay = false;
+            if (keys[i].step_exist[j])
+            {
+                step_index[step_count++] = j;
+            }
         }
 
+        for (int j = 0; j < step_count - 1; j++)
+        {
+            if (j != 0)
+                offset += snprintf(json + offset, sizeof(json) - offset, ",");
+
+            // delay giữa step_index[j] → step_index[j+1] ứng với delays[step_index[j] - 1]
+            int step_start = step_index[j];
+            int delay_value = (step_start > 0) ? delays[step_start - 1] : 0;
+
+            offset += snprintf(json + offset, sizeof(json) - offset, "%d", delay_value);
+        }
         offset += snprintf(json + offset, sizeof(json) - offset, "]}");
     }
 
@@ -333,29 +368,42 @@ esp_err_t ir_list_handler(httpd_req_t *req)
 }
 esp_err_t ir_update_delay_handler(httpd_req_t *req)
 {
-    char key[IR_KEY_MAX_LEN];
-    if (httpd_req_get_url_query_str(req, key, sizeof(key)) != ESP_OK) {
-        return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Missing key");
+    // B1: Lấy key từ query string
+    char query[64];
+    if (httpd_req_get_url_query_str(req, query, sizeof(query)) != ESP_OK)
+    {
+        return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Missing query string");
     }
 
-    char buf[256];
-    int len = httpd_req_recv(req, buf, sizeof(buf));
-    if (len <= 0) {
+    char key[IR_KEY_MAX_LEN];
+    if (httpd_query_key_value(query, "key", key, sizeof(key)) != ESP_OK)
+    {
+        return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Missing key param");
+    }
+
+    // B2: Đọc body (delays)
+    char buf[512];
+    int len = httpd_req_recv(req, buf, sizeof(buf) - 1);
+    if (len <= 0)
+    {
         return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to receive body");
     }
-
     buf[len] = '\0';
+
+    // B3: Parse delay
     int delays[IR_STEP_COUNT_MAX] = {0};
     size_t count = 0;
-
     char *token = strtok(buf, ",");
-    while (token && count < IR_STEP_COUNT_MAX) {
+    while (token && count < IR_STEP_COUNT_MAX)
+    {
         delays[count++] = atoi(token);
         token = strtok(NULL, ",");
     }
 
+    // B4: Ghi vào file
     int result = save_step_timediff_to_file(key, delays, count);
-    if (result != 0) {
+    if (result != 0)
+    {
         return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Save failed");
     }
 
@@ -385,6 +433,38 @@ esp_err_t ir_delete_handler(httpd_req_t *req)
     httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Missing name");
     return ESP_FAIL;
 }
+esp_err_t ir_delete_step_handler(httpd_req_t *req)
+{
+    char query[64];
+    if (httpd_req_get_url_query_str(req, query, sizeof(query)) != ESP_OK)
+    {
+        return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Missing query string");
+    }
+
+    char key[IR_KEY_MAX_LEN];
+    char idx_str[8];
+    if (httpd_query_key_value(query, "key", key, sizeof(key)) != ESP_OK ||
+        httpd_query_key_value(query, "index", idx_str, sizeof(idx_str)) != ESP_OK)
+    {
+        return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Missing key or index");
+    }
+
+    int index = atoi(idx_str);
+    if (index < 0 || index >= IR_STEP_COUNT_MAX)
+    {
+        return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid index");
+    }
+
+    // Gọi hàm xoá step khỏi file (tuỳ Bro triển khai)
+    bool ok = ir_delete_step_from_file(key, index);
+    if (!ok)
+    {
+        return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Delete step failed");
+    }
+
+    ESP_LOGI("IR", "Đã xoá step %d trong lệnh %s", index, key);
+    return httpd_resp_sendstr(req, "Step deleted");
+}
 
 esp_err_t ir_rename_handler(httpd_req_t *req)
 {
@@ -411,23 +491,171 @@ esp_err_t ir_rename_handler(httpd_req_t *req)
     httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Missing old or new name");
     return ESP_FAIL;
 }
+esp_err_t ir_assign_handler(httpd_req_t *req)
+{
+    char buf[128];
+    int len = httpd_req_recv(req, buf, sizeof(buf) - 1);
+    if (len <= 0)
+        return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Missing body");
 
-static const httpd_uri_t static_file = {
+    buf[len] = '\0';
+
+    char source[32], target[32];
+    cJSON *json = cJSON_Parse(buf);
+    if (!json)
+        return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid JSON");
+
+    cJSON *src = cJSON_GetObjectItem(json, "source");
+    cJSON *dst = cJSON_GetObjectItem(json, "target");
+
+    if (!cJSON_IsString(src) || !cJSON_IsString(dst))
+    {
+        cJSON_Delete(json);
+        return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid params");
+    }
+
+    strncpy(source, src->valuestring, sizeof(source));
+    strncpy(target, dst->valuestring, sizeof(target));
+    cJSON_Delete(json);
+
+    cJSON *aliases;
+    if (ir_load_aliases(&aliases) != ESP_OK)
+        return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Load failed");
+
+    cJSON_ReplaceItemInObject(aliases, source, cJSON_CreateString(target));
+    ir_save_aliases(aliases);
+    cJSON_Delete(aliases);
+
+    return httpd_resp_sendstr(req, "Alias updated");
+}
+
+esp_err_t ir_alias_list_handler(httpd_req_t *req)
+{
+    cJSON *aliases;
+    if (ir_load_aliases(&aliases) != ESP_OK)
+        return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Load failed");
+
+    char *json_str = cJSON_PrintUnformatted(aliases);
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_sendstr(req, json_str);
+
+    cJSON_Delete(aliases);
+    free(json_str);
+    return ESP_OK;
+}
+
+esp_err_t ir_alias_delete_handler(httpd_req_t *req)
+{
+    char query[64], source[32];
+    if (httpd_req_get_url_query_str(req, query, sizeof(query)) != ESP_OK ||
+        httpd_query_key_value(query, "source", source, sizeof(source)) != ESP_OK)
+    {
+        return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Missing source param");
+    }
+
+    cJSON *aliases;
+    if (ir_load_aliases(&aliases) != ESP_OK)
+        return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Load failed");
+
+    cJSON_DeleteItemFromObject(aliases, source);
+    ir_save_aliases(aliases);
+    cJSON_Delete(aliases);
+
+    return httpd_resp_sendstr(req, "Alias deleted");
+}
+esp_err_t ir_assign_bulk_handler(httpd_req_t *req)
+{
+    char content[1024];
+    int received = httpd_req_recv(req, content, sizeof(content) - 1); // Trừ 1 để chừa '\0'
+    if (received <= 0)
+        return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to receive");
+
+    content[received] = '\0';
+
+    cJSON *arr = cJSON_Parse(content);
+    if (!arr || !cJSON_IsArray(arr))
+    {
+        if (arr)
+            cJSON_Delete(arr);
+        return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid JSON array");
+    }
+
+    // Load aliases từ file nếu có
+    cJSON *aliases = NULL;
+    if (ir_load_aliases(&aliases) != ESP_OK || !aliases)
+    {
+        aliases = cJSON_CreateObject(); // Tạo mới nếu không tồn tại
+    }
+
+    // Lặp qua từng phần tử trong mảng
+    cJSON *item = NULL;
+    cJSON_ArrayForEach(item, arr)
+    {
+        cJSON *from = cJSON_GetObjectItem(item, "from");
+        cJSON *to = cJSON_GetObjectItem(item, "to");
+
+        if (!cJSON_IsString(from) || !cJSON_IsString(to))
+        {
+            ESP_LOGW("IR_ASSIGN", "Bỏ qua item không hợp lệ");
+            continue;
+        }
+
+        // Gán: từ source → target
+        cJSON_ReplaceItemInObject(aliases, from->valuestring, cJSON_CreateString(to->valuestring));
+        ESP_LOGI("IR_ASSIGN", "Gán %s → %s", from->valuestring, to->valuestring);
+    }
+
+    // Ghi lại file alias
+    esp_err_t save_res = ir_save_aliases(aliases);
+    cJSON_Delete(aliases);
+    cJSON_Delete(arr);
+
+    if (save_res != ESP_OK)
+        return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to save alias file");
+
+    return httpd_resp_sendstr(req, "✅ Bulk IR assignments saved!");
+}
+
+esp_err_t ir_simple_list_handler(httpd_req_t *req)
+{
+    cJSON *arr = cJSON_CreateArray();
+
+    DIR *dir = opendir("/spiffs");
+    if (!dir)
+        return httpd_resp_send_err(req, 500, "Cannot open SPIFFS");
+
+    struct dirent *entry;
+    while ((entry = readdir(dir)) != NULL)
+    {
+        if (entry->d_type != DT_REG)
+            continue;
+        if (strstr(entry->d_name, ".ir"))
+            cJSON_AddItemToArray(arr, cJSON_CreateString(entry->d_name));
+    }
+    closedir(dir);
+
+    char *json = cJSON_PrintUnformatted(arr);
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_sendstr(req, json);
+    free(json);
+    cJSON_Delete(arr);
+    return ESP_OK;
+}
+
+httpd_uri_t index_uri = {
     .uri = "/",
     .method = HTTP_GET,
-    .handler = static_file_get_handler,
+    .handler = index_handler,
     .user_ctx = NULL};
-
-static const httpd_uri_t uri_style = {
+httpd_uri_t css_uri = {
     .uri = "/style.css",
     .method = HTTP_GET,
-    .handler = static_file_get_handler,
+    .handler = css_handler,
     .user_ctx = NULL};
-
-static const httpd_uri_t uri_script = {
+httpd_uri_t js_uri = {
     .uri = "/script.js",
     .method = HTTP_GET,
-    .handler = static_file_get_handler,
+    .handler = js_handler,
     .user_ctx = NULL};
 
 httpd_uri_t send_uri = {
@@ -490,6 +718,36 @@ httpd_uri_t uri_update_delay = {
     .handler = ir_update_delay_handler,
     .user_ctx = NULL};
 
+httpd_uri_t delete_delay_uri = {
+    .uri = "/ir/delete_delay",
+    .method = HTTP_POST,
+    .handler = ir_delete_step_handler};
+
+httpd_uri_t assign_post = {
+    .uri = "/ir/assign",
+    .method = HTTP_POST,
+    .handler = ir_assign_handler};
+
+httpd_uri_t assign_get = {
+    .uri = "/ir/aliases",
+    .method = HTTP_GET,
+    .handler = ir_alias_list_handler};
+
+httpd_uri_t assign_delete = {
+    .uri = "/ir/assign",
+    .method = HTTP_DELETE,
+    .handler = ir_alias_delete_handler};
+
+httpd_uri_t assign_list = {
+    .uri = "/ir/simple_list",
+    .method = HTTP_GET,
+    .handler = ir_simple_list_handler};
+
+    httpd_uri_t assign_bulk = {
+        .uri = "/ir/assign/bulk",
+        .method = HTTP_POST,
+        .handler = ir_assign_bulk_handler};
+
 void app_web_server_start(void)
 {
     mdns_start();
@@ -498,7 +756,7 @@ void app_web_server_start(void)
 
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     config.max_uri_handlers = 30;
-    config.stack_size = 8192;
+    config.stack_size = 8192 * 2;
 
     ESP_LOGI(TAG, "Starting server on port: '%d'", config.server_port);
     esp_err_t ret = httpd_start(&server, &config);
@@ -509,9 +767,9 @@ void app_web_server_start(void)
     }
     s_server = server;
 
-    httpd_register_uri_handler(server, &static_file);
-    httpd_register_uri_handler(server, &uri_style);
-    httpd_register_uri_handler(server, &uri_script);
+    httpd_register_uri_handler(server, &index_uri);
+    httpd_register_uri_handler(server, &css_uri);
+    httpd_register_uri_handler(server, &js_uri);
 
     httpd_register_uri_handler(server, &send_uri);
     httpd_register_uri_handler(server, &white_uri);
@@ -524,6 +782,13 @@ void app_web_server_start(void)
     httpd_register_uri_handler(server, &uri_delete);
     httpd_register_uri_handler(server, &uri_rename);
     httpd_register_uri_handler(server, &uri_update_delay);
+    httpd_register_uri_handler(server, &delete_delay_uri);
+
+    httpd_register_uri_handler(server, &assign_post);
+    httpd_register_uri_handler(server, &assign_get);
+    httpd_register_uri_handler(server, &assign_delete);
+    httpd_register_uri_handler(server, &assign_list);
+    httpd_register_uri_handler(server, &assign_bulk);
 
     // xTaskCreate(start_dns_server, "dns_server", 4096, NULL, 5, NULL);
 

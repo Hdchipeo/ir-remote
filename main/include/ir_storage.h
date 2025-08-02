@@ -2,6 +2,7 @@
 
 #include "esp_err.h"
 #include "ir_learn.h"  // Make sure this contains the definition of struct ir_learn_sub_list_head
+#include "cJSON.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -94,8 +95,14 @@ esp_err_t load_step_timediff_from_file(const char *key_name, int *timediff_list,
  * This function lists all files with the ".timediff" extension in the SPIFFS partition.
  */
 void list_ir_step_delay_from_spiffs(void);
+bool ir_delete_step_from_file(const char *key, int index);
+void print_delays_from_file(const char *key_name);
 void read_nvs(bool *ota_enabled);
 void write_nvs(bool ota_enabled);
+esp_err_t ir_load_aliases(cJSON **out_aliases);
+esp_err_t ir_save_aliases(cJSON *aliases);
+esp_err_t ir_get_mapped_key(const char *src_key, char *out_key, size_t max_len);
+bool find_original_key_from_match(const struct ir_learn_sub_list_head *result, char *out_original_key);
 
 #ifdef __cplusplus
 }

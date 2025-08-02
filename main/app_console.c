@@ -39,6 +39,7 @@ void app_console_start()
     register_ir_learn_step_commands();
     register_ir_send_step_commands();
     register_ir_reset_nvs_commands();
+    register_ir_print_delay_commands();
     ESP_LOGI(TAG, "Registering IR commands");
 
 

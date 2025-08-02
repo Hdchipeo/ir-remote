@@ -75,7 +75,8 @@ static int count_sub_nodes(const struct ir_learn_sub_list_head *head)
 
 bool match_ir_with_key(const struct ir_learn_sub_list_head *data_learn, const char *key, char *matched_key_out)
 {
-    if (!key || strlen(key) == 0) {
+    if (!key || strlen(key) == 0)
+    {
         ESP_LOGE("IR_MATCH", "Invalid key");
         return false;
     }
@@ -86,7 +87,8 @@ bool match_ir_with_key(const struct ir_learn_sub_list_head *data_learn, const ch
     ir_learn_load(&temp_list, key);
     ESP_LOGI("IR_MATCH", "Checking key: %s", key);
 
-    if (SLIST_EMPTY(&temp_list)) {
+    if (SLIST_EMPTY(&temp_list))
+    {
         ir_learn_clean_sub_data(&temp_list);
         return false;
     }
@@ -293,13 +295,27 @@ void ir_send_step(const char *key_name)
 
 void ir_send_command(const char *key_name)
 {
-    ESP_LOGI(TAG, "IR command sent for key: %s", key_name);
-    ir_event_cmd_t IR_cmd = {
-        .event = IR_EVENT_TRANSMIT};
+    ir_event_cmd_t IR_cmd = {0};
     snprintf(IR_cmd.key, IR_KEY_MAX_LEN, "%s", key_name);
-    xQueueSend(ir_trans_queue, &IR_cmd, portMAX_DELAY);
 
-    send_data_to_screen(key_name, "normal");
+    char step_path[64];
+    snprintf(step_path, sizeof(step_path), "/spiffs/%s_step1.ir", key_name);
+
+    // Kiểm tra có phải lệnh dạng chuỗi step không
+    FILE *f = fopen(step_path, "r");
+    if (f)
+    {
+        fclose(f);
+        IR_cmd.event = IR_EVENT_SEND_STEP;
+        ESP_LOGI(TAG, "IR command is a step-sequence: %s", key_name);
+    }
+    else
+    {
+        IR_cmd.event = IR_EVENT_TRANSMIT;
+        ESP_LOGI(TAG, "IR command is a single command: %s", key_name);
+    }
+
+    xQueueSend(ir_trans_queue, &IR_cmd, portMAX_DELAY);
 }
 
 void ir_white_screen(void)
@@ -384,7 +400,6 @@ bool ir_delete_command(const char *key_name)
     }
 
     return true;
-
 }
 bool ir_rename_command(const char *old_key_name, const char *new_key_name)
 {

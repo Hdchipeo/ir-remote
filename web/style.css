@@ -370,3 +370,28 @@ h3 {
     color: #555;
 }
 
+.assign-pair {
+    display: flex;
+    justify-content: center; /* Căn giữa ngang */
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+.input-select {
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px solid #aaa;
+    min-width: 140px;
+}
+.assign-button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 10px;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+}
+.assign-button:hover {
+    background-color: #0056b3;
+}
+

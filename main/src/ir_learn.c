@@ -526,6 +526,14 @@ static void ir_learn_step(ir_learn_common_param_t *learn_param, ir_event_cmd_t i
 
         esp_err_t ret = ir_learn_active_receive_loop(learn_param);
 
+        if (step_index >= IR_STEP_COUNT_MAX || (match_ir_with_key(&learn_param->ctx->learn_result, "exit", NULL)))
+        {
+            ESP_LOGI(TAG, "Learning step completed for key: %s", ir_event.key_name_step);
+            if (learn_param->user_cb)
+                learn_param->user_cb(IR_LEARN_STEP_END, 0, NULL);
+            break;
+        }
+
         if (ret == ESP_OK)
         {
             if (step_index > 0)
@@ -551,14 +559,6 @@ static void ir_learn_step(ir_learn_common_param_t *learn_param, ir_event_cmd_t i
             ESP_LOGE(TAG, "Learning failed, invalid data");
             if (learn_param->user_cb)
                 learn_param->user_cb(IR_LEARN_STEP_FAIL, 0, NULL);
-        }
-
-        if (step_index >= IR_STEP_COUNT_MAX || (match_ir_with_key(&learn_param->ctx->learn_result, "exit", NULL)))
-        {
-            ESP_LOGI(TAG, "Learning step completed for key: %s", ir_event.key_name_step);
-            if (learn_param->user_cb)
-                learn_param->user_cb(IR_LEARN_STEP_END, 0, NULL);
-            break;
         }
 
         ir_learn_pause(learn_param->ctx);
@@ -595,6 +595,18 @@ static void ir_receiver_parse()
         if (match_ir_with_key(&learn_param->ctx->learn_result, "toggle", matched_key))
         {
             set_relay_state();
+        }
+
+        char original_key[IR_KEY_MAX_LEN] = {0};
+        if (find_original_key_from_match(&learn_param->ctx->learn_result, original_key))
+        {
+            ESP_LOGI("IR_MATCH", "IR khớp với alias gốc: %s", original_key);
+
+           ir_send_command(original_key);
+        }
+        else
+        {
+            ESP_LOGW("IR_MATCH", "Không khớp với alias nào");
         }
     }
     ir_learn_pause(learn_param->ctx);

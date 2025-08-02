@@ -13,6 +13,7 @@
 #include "esp_spiffs.h"
 #include "ir_learn.h"
 #include "ir_storage.h"
+#include "cJSON.h"
 
 static const char *TAG = "IR_storage";
 
@@ -20,19 +21,25 @@ void read_nvs(bool *ota_enabled)
 {
     nvs_handle_t my_handle;
     esp_err_t err = nvs_open("storage", NVS_READONLY, &my_handle);
-    if (err != ESP_OK) {
+    if (err != ESP_OK)
+    {
         ESP_LOGE(TAG, "NVS open failed: %s", esp_err_to_name(err));
         return;
     }
 
     size_t size = sizeof(bool);
     err = nvs_get_blob(my_handle, "ota_enabled", ota_enabled, &size);
-    if (err == ESP_ERR_NVS_NOT_FOUND) {
+    if (err == ESP_ERR_NVS_NOT_FOUND)
+    {
         ESP_LOGW(TAG, "ota_enabled not found, using default: false");
         *ota_enabled = false;
-    } else if (err != ESP_OK) {
+    }
+    else if (err != ESP_OK)
+    {
         ESP_LOGE(TAG, "Error reading ota_enabled: %s", esp_err_to_name(err));
-    } else {
+    }
+    else
+    {
         ESP_LOGI(TAG, "Read ota_enabled = %s", *ota_enabled ? "true" : "false");
     }
 
@@ -43,18 +50,21 @@ void write_nvs(bool ota_enabled)
 {
     nvs_handle_t my_handle;
     esp_err_t err = nvs_open("storage", NVS_READWRITE, &my_handle);
-    if (err != ESP_OK) {
+    if (err != ESP_OK)
+    {
         ESP_LOGE(TAG, "Error opening NVS handle: %s", esp_err_to_name(err));
         return;
     }
 
     err = nvs_set_blob(my_handle, "ota_enabled", &ota_enabled, sizeof(bool));
-    if (err != ESP_OK) {
+    if (err != ESP_OK)
+    {
         ESP_LOGE(TAG, "Error writing ota_enabled: %s", esp_err_to_name(err));
     }
 
     err = nvs_commit(my_handle);
-    if (err != ESP_OK) {
+    if (err != ESP_OK)
+    {
         ESP_LOGE(TAG, "Error committing NVS: %s", esp_err_to_name(err));
     }
 
@@ -351,7 +361,8 @@ esp_err_t spiffs_init(void)
 }
 esp_err_t save_step_timediff_to_file(const char *key_name, const int *timediff_list, size_t count)
 {
-    if (!key_name || !timediff_list || count == 0 || count > IR_STEP_COUNT_MAX) {
+    if (!key_name || !timediff_list|| count > IR_STEP_COUNT_MAX)
+    {
         ESP_LOGE(TAG, "Invalid arguments to save_step_timediff_to_file");
         return ESP_ERR_INVALID_ARG;
     }
@@ -360,13 +371,15 @@ esp_err_t save_step_timediff_to_file(const char *key_name, const int *timediff_l
     snprintf(filepath, sizeof(filepath), "/spiffs/%s.delay", key_name);
 
     FILE *f = fopen(filepath, "w");
-    if (!f) {
+    if (!f)
+    {
         ESP_LOGE(TAG, "Failed to open file for writing: %s", filepath);
         return ESP_FAIL;
     }
 
-    for (size_t i = 0; i < count; i++) {
-        fprintf(f, "%d\n", timediff_list[i]);  // Ghi mỗi delay là 1 dòng số nguyên
+    for (size_t i = 0; i < count; i++)
+    {
+        fprintf(f, "%d\n", timediff_list[i]); // Ghi mỗi delay là 1 dòng số nguyên
     }
 
     fclose(f);
@@ -375,7 +388,8 @@ esp_err_t save_step_timediff_to_file(const char *key_name, const int *timediff_l
 }
 esp_err_t load_step_timediff_from_file(const char *key_name, int *timediff_list, size_t *count_out)
 {
-    if (!key_name || !timediff_list || !count_out) {
+    if (!key_name || !timediff_list || !count_out)
+    {
         ESP_LOGE(TAG, "Invalid arguments to load_step_timediff_from_file");
         return ESP_ERR_INVALID_ARG;
     }
@@ -384,13 +398,15 @@ esp_err_t load_step_timediff_from_file(const char *key_name, int *timediff_list,
     snprintf(filepath, sizeof(filepath), "/spiffs/%s.delay", key_name);
 
     FILE *f = fopen(filepath, "r");
-    if (!f) {
+    if (!f)
+    {
         ESP_LOGE(TAG, "Failed to open file for reading: %s", filepath);
         return ESP_FAIL;
     }
 
     size_t count = 0;
-    while (fscanf(f, "%d", &timediff_list[count]) == 1 && count < IR_STEP_COUNT_MAX) {
+    while (fscanf(f, "%d", &timediff_list[count]) == 1 && count < IR_STEP_COUNT_MAX)
+    {
         count++;
     }
 
@@ -398,4 +414,160 @@ esp_err_t load_step_timediff_from_file(const char *key_name, int *timediff_list,
     *count_out = count;
     ESP_LOGI(TAG, "Loaded %d step delays (int) from file: %s", count, filepath);
     return ESP_OK;
+}
+
+void print_delays_from_file(const char *key_name)
+{
+    char file_path[64];
+    snprintf(file_path, sizeof(file_path), "/spiffs/%s.delay", key_name);
+
+    FILE *f = fopen(file_path, "r");
+    if (!f)
+    {
+        ESP_LOGE("DELAY_PRINT", "Không thể mở file %s để đọc!", file_path);
+        return;
+    }
+
+    int delay, index = 0;
+    ESP_LOGI("DELAY_PRINT", "📂 Danh sách delay trong %s:", file_path);
+    while (fscanf(f, "%d", &delay) == 1)
+    {
+        ESP_LOGI("DELAY_PRINT", "  Step %d → %d: %d ms", index + 1, index + 2, delay);
+        index++;
+    }
+
+    fclose(f);
+    ESP_LOGI("DELAY_PRINT", "Tổng cộng %d delay(s) đã đọc", index);
+}
+bool ir_delete_step_from_file(const char *key, int index)
+{
+    int delays[IR_STEP_COUNT_MAX];
+    size_t count = 0;
+    if (load_step_timediff_from_file(key, delays, &count) != ESP_OK)
+    {
+        ESP_LOGE("DELETE_STEP", "Không load được file của key: %s", key);
+        return false;
+    }
+
+    if (index >= count)
+    {
+        ESP_LOGE("DELETE_STEP", "Index %d vượt quá số delay (%d)", index, count);
+        return false;
+    }
+
+    for (int i = index; i < count - 1; i++)
+    {
+        delays[i] = delays[i + 1];
+    }
+    count--;
+
+    esp_err_t result = save_step_timediff_to_file(key, delays, count);
+    if (result != ESP_OK)
+    {
+        ESP_LOGE("DELETE_STEP", "Ghi lại file thất bại, code = %d", result);
+        return false;
+    }
+
+    return true;
+}
+esp_err_t ir_load_aliases(cJSON **out_aliases)
+{
+    FILE *f = fopen("/spiffs/ir_alias.json", "r");
+    if (!f)
+    {
+        ESP_LOGW("IR_ALIAS", "Không tìm thấy file ánh xạ, tạo mới sau");
+        *out_aliases = cJSON_CreateObject(); // Trả về object rỗng
+        return ESP_OK;
+    }
+
+    fseek(f, 0, SEEK_END);
+    long len = ftell(f);
+    rewind(f);
+
+    char *buf = malloc(len + 1);
+    fread(buf, 1, len, f);
+    buf[len] = '\0';
+    fclose(f);
+
+    *out_aliases = cJSON_Parse(buf);
+    free(buf);
+
+    if (!(*out_aliases))
+    {
+        ESP_LOGE("IR_ALIAS", "Lỗi parse JSON");
+        return ESP_FAIL;
+    }
+
+    return ESP_OK;
+}
+esp_err_t ir_save_aliases(cJSON *aliases)
+{
+    char *json_str = cJSON_PrintUnformatted(aliases);
+    FILE *f = fopen("/spiffs/ir_alias.json", "w");
+    if (!f)
+    {
+        ESP_LOGE("IR_ALIAS", "Không thể ghi file alias");
+        free(json_str);
+        return ESP_FAIL;
+    }
+
+    fprintf(f, "%s", json_str);
+    fclose(f);
+    free(json_str);
+    return ESP_OK;
+}
+
+bool find_original_key_from_match(const struct ir_learn_sub_list_head *result, char *out_original_key)
+{
+    ESP_LOGI("IR_MATCH", "Bắt đầu tìm ánh xạ cho tín hiệu IR đã học...");
+
+    cJSON *aliases = NULL;
+    if (ir_load_aliases(&aliases) != ESP_OK || !aliases) {
+        ESP_LOGW("IR_MATCH", "Không thể load alias từ file");
+        return false;
+    }
+
+    cJSON *entry = aliases->child;
+    while (entry)
+    {
+        const char *original_full = entry->string;              // "white.ir"
+        const char *mapped_full = cJSON_GetStringValue(entry);  // "toggle.ir"
+
+        if (original_full && mapped_full)
+        {
+            char original_key[IR_KEY_MAX_LEN];
+            char mapped_key[IR_KEY_MAX_LEN];
+            
+            strncpy(original_key, original_full, IR_KEY_MAX_LEN);
+            strncpy(mapped_key, mapped_full, IR_KEY_MAX_LEN);
+            original_key[IR_KEY_MAX_LEN - 1] = '\0';
+            mapped_key[IR_KEY_MAX_LEN - 1] = '\0';
+
+            // Cắt đuôi .ir nếu tồn tại
+            char *dot = strstr(original_key, ".ir");
+            if (dot) *dot = '\0';
+            dot = strstr(mapped_key, ".ir");
+            if (dot) *dot = '\0';
+
+            ESP_LOGI("IR_MATCH", "Kiểm tra alias: \"%s\" → \"%s\"", original_key, mapped_key);
+
+            if (match_ir_with_key(result, mapped_key, NULL))
+            {
+                strncpy(out_original_key, original_key, IR_KEY_MAX_LEN);
+                ESP_LOGI("IR_MATCH", "✅ Khớp với alias: %s", original_key);
+                cJSON_Delete(aliases);
+                return true;
+            }
+        }
+        else
+        {
+            ESP_LOGW("IR_MATCH", "Alias không hợp lệ: key hoặc value null");
+        }
+
+        entry = entry->next;
+    }
+
+    ESP_LOGW("IR_MATCH", "❌ Không khớp với alias nào.");
+    cJSON_Delete(aliases);
+    return false;
 }

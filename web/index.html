@@ -52,6 +52,15 @@
             <button onclick="learnDefault('ok')">Học lệnh OK</button>
             <button onclick="learnDefault('exit')">Học lệnh Exit</button>
         </div>
+        <h3 style="text-align:center; margin-top: 40px;">🎯 Gán lệnh IR</h3>
+        <div class="assign-ir box-shadow p-4">
+            <div id="assign-container" class="space-y-2 flex flex-col items-center"></div>
+        
+            <div style="text-align: center; margin-top: 12px;">
+                <button onclick="addAssignPair()" class="assign-button">➕ Thêm lệnh gán</button>
+                <button onclick="submitAllAssignments()" class="assign-button" style="margin-left: 8px;">🚀 Gửi tất cả</button>
+            </div>
+        </div>
     </div>
 
     <!-- Tab: Danh sách lệnh -->

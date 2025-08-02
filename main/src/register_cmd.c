@@ -192,6 +192,19 @@ static int ir_rename_key_cmd(int argc, char **argv)
 
     return 0;
 }
+static int print_delay_from_spiffs(int argc, char **argv)
+{
+    int nerrors = arg_parse(argc, argv, (void **)&ir_key_args);
+    if (nerrors != 0)
+    {
+        arg_print_errors(stderr, ir_key_args.end, argv[0]);
+        return 1;
+    }
+
+    print_delays_from_file(ir_key_args.key->sval[0]);
+
+    return 0;
+}
 
 void register_ir_reset_nvs_commands(void)
 {
@@ -327,4 +340,18 @@ void register_ir_list_commands(void)
         .argtable = NULL};
 
     ESP_ERROR_CHECK(esp_console_cmd_register(&list_cmd));
+}
+void register_ir_print_delay_commands(void)
+{
+    ir_key_args.key = arg_str1(NULL, NULL, "<Name for ir delay>", "Input name for ir delay command");
+    ir_key_args.end = arg_end(1);
+    /* Register custom commands here */
+    esp_console_cmd_t print_delay_cmd = {
+        .command = "print_delay",
+        .help = "Print delays from file",
+        .hint = NULL,
+        .func = &print_delay_from_spiffs,
+        .argtable = &ir_key_args};
+
+    ESP_ERROR_CHECK(esp_console_cmd_register(&print_delay_cmd));
 }
